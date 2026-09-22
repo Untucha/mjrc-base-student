@@ -75,12 +75,11 @@ import {
 
 const CATEGORY_OPTIONS = [
   'RC Crawlers',
-  'Mini RC Cars',
-  'Drift RC',
-  'RC Boats',
-  'Monster Trucks',
-  'RC Speed Boats',
-  'RC Heavy Machinery'
+  'Trail Pickups',
+  'Drift and Rally',
+  'Bashers and Monster',
+  'Heavy Machinery',
+  'Short course'
 ];
 
 const SCALE_OPTIONS = ['1:64', '1:43', '1:32', '1:24', '1:18', '1:14', '1:10', '1:8', '1:5'];
@@ -4529,18 +4528,28 @@ export const AdminDashboard = () => {
         {/* HUB 5: SHOP BY CATEGORY (NESTED WITH INLINE BRAND CONTROLS) */}
         {activeTab === 'categories' && (
           <div className="space-y-8">
-            {CATEGORY_OPTIONS.map((catName) => {
-              const catProducts = displayProducts.filter(p => (p.category || '').toLowerCase() === catName.toLowerCase());
-              const isCatVisible = !(categoryVisibility && categoryVisibility[catName] === false);
+            {(categoriesList && categoriesList.length > 0
+              ? categoriesList
+              : CATEGORY_OPTIONS.map(name => ({ id: name, name, label: name }))
+            ).map((cat) => {
+              const catName = cat.name || cat.label || cat.id || 'Category';
+              const catId = cat.id || cat.slug || '';
+              const catProducts = displayProducts.filter(p => {
+                const pCat = (p.category || '').toLowerCase().trim();
+                const cName = catName.toLowerCase().trim();
+                const cId = (catId || '').toLowerCase().trim();
+                return pCat === cName || (cId && pCat === cId) || (cName && pCat.includes(cName)) || (cName && cName.includes(pCat));
+              });
+              const isCatVisible = cat.isVisible !== false && !(categoryVisibility && categoryVisibility[catName] === false);
               const categoryBrands = Array.from(new Set(catProducts.map(p => p.brand).filter(Boolean)));
 
               return (
-                <div key={catName} className="bg-white border border-slate-200/80 rounded-3xl p-6 shadow-xs space-y-6">
+                <div key={cat.id || cat.slug || catName} className="bg-white border border-slate-200/80 rounded-3xl p-6 shadow-xs space-y-6">
                   
                   <div className="flex flex-col sm:flex-row sm:items-center justify-between border-b border-slate-100 pb-4 gap-2">
                     <div className="flex items-center gap-3">
                       <div className="w-10 h-10 rounded-2xl bg-emerald-50 text-emerald-700 font-black text-base flex items-center justify-center border border-emerald-200">
-                        📦
+                        {cat.icon || '📦'}
                       </div>
                       <div>
                         <h3 className="font-black text-lg text-slate-900 tracking-tight">{catName}</h3>
@@ -4563,7 +4572,13 @@ export const AdminDashboard = () => {
 
                       <button
                         type="button"
-                        onClick={() => toggleCategoryVisibility && toggleCategoryVisibility(catName)}
+                        onClick={() => {
+                          if (saveCategory && cat.id) {
+                            saveCategory({ ...cat, isVisible: !isCatVisible });
+                          } else if (toggleCategoryVisibility) {
+                            toggleCategoryVisibility(catName);
+                          }
+                        }}
                         className={`px-3.5 py-2 rounded-xl text-xs font-extrabold flex items-center gap-2 border transition cursor-pointer ${
                           isCatVisible
                             ? 'bg-emerald-50 text-emerald-800 border-emerald-200 hover:bg-emerald-100'

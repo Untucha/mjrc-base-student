@@ -13,58 +13,49 @@ export const CATEGORIES = [
     description: 'Extreme 4WD trail & rock crawlers with portal axles and scale specs.'
   },
   {
-    id: 'cat-mini',
-    name: 'Mini RC Cars',
-    slug: 'mini-rc-cars',
-    label: 'Mini RC Cars',
+    id: 'cat-trail-pickups',
+    name: 'Trail Pickups',
+    slug: 'trail-pickups',
+    label: 'Trail Pickups',
     image: 'https://images.unsplash.com/photo-1568605117036-5fe5e7bab0b7?auto=format&fit=crop&w=300&q=80',
-    icon: '🎮',
-    description: 'Compact high-speed mini bashers & indoor micro racers.'
+    icon: '🛻',
+    description: 'Scale 4x4 trail pickups and adventure rigs.'
   },
   {
-    id: 'cat-drift',
-    name: 'Drift RC',
-    slug: 'drift-rc',
-    label: 'Drift RC',
+    id: 'cat-drift-rally',
+    name: 'Drift and Rally',
+    slug: 'drift-and-rally',
+    label: 'Drift and Rally',
     image: 'https://images.unsplash.com/photo-1552519507-da3b142c6e3d?auto=format&fit=crop&w=300&q=80',
     icon: '🏎️',
-    description: 'Precision gyro-assisted 4WD & RWD drift machines for high-angle slides.'
+    description: 'Precision drift machines and high-speed rally cars.'
   },
   {
-    id: 'cat-boat',
-    name: 'RC Boats',
-    slug: 'rc-boats',
-    label: 'RC Boats',
-    image: 'https://images.unsplash.com/photo-1544620347-c4fd4a3d5957?auto=format&fit=crop&w=300&q=80',
-    icon: '⛵',
-    description: 'Self-righting watercraft and scale pleasure boats.'
-  },
-  {
-    id: 'cat-monster',
-    name: 'Monster Trucks',
-    slug: 'monster-trucks',
-    label: 'Monster Trucks',
+    id: 'cat-bashers-monster',
+    name: 'Bashers and Monster',
+    slug: 'bashers-and-monster',
+    label: 'Bashers and Monster',
     image: 'https://images.unsplash.com/photo-1594787318286-3d835c1d207f?auto=format&fit=crop&w=300&q=80',
-    icon: '🛻',
-    description: 'Heavy 6S & 8S high-speed bashing monster trucks with big-bore shocks.'
+    icon: '⚡',
+    description: 'High-speed bashing monster trucks and stunt vehicles.'
   },
   {
-    id: 'cat-speed-boats',
-    name: 'RC Speed Boats',
-    slug: 'rc-speed-boats',
-    label: 'RC Speed Boats',
-    image: 'https://images.unsplash.com/photo-1544620347-c4fd4a3d5957?auto=format&fit=crop&w=300&q=80',
-    icon: '🚤',
-    description: 'High-speed water-cooled brushless catamaran speed boats.'
-  },
-  {
-    id: 'cat-construction',
-    name: 'RC Heavy Machinery',
-    slug: 'rc-heavy-machinery',
-    label: 'RC Heavy Machinery',
+    id: 'cat-heavy-machinery',
+    name: 'Heavy Machinery',
+    slug: 'heavy-machinery',
+    label: 'Heavy Machinery',
     image: 'https://images.unsplash.com/photo-1583121274602-3e2820c69888?auto=format&fit=crop&w=300&q=80',
     icon: '🚜',
     description: 'Full hydraulic excavators, heavy dump trucks & loaders.'
+  },
+  {
+    id: 'cat-short-course',
+    name: 'Short course',
+    slug: 'short-course',
+    label: 'Short course',
+    image: 'https://images.unsplash.com/photo-1544620347-c4fd4a3d5957?auto=format&fit=crop&w=300&q=80',
+    icon: '🏁',
+    description: 'Off-road short course racing trucks and buggies.'
   }
 ];
 
