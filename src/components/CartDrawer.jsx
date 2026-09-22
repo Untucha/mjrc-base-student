@@ -102,6 +102,13 @@ export const CartDrawer = () => {
                     <h4 className="text-xs font-extrabold text-slate-900 line-clamp-1">
                       {item.title}
                     </h4>
+
+                    {item.selectedColor && (
+                      <div className="text-[10px] text-slate-600 font-extrabold mt-0.5 flex items-center gap-1">
+                        <span className="w-1.5 h-1.5 rounded-full bg-emerald-600 inline-block"></span>
+                        <span>Color: {item.selectedColor}</span>
+                      </div>
+                    )}
                     
                     {item.selectedAddons && item.selectedAddons.length > 0 && (
                       <div className="text-[10px] text-emerald-700 font-bold mt-0.5 line-clamp-1">

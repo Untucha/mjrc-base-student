@@ -144,6 +144,8 @@ const FullProductModal = ({ product = null, preset = null, onClose, onSave }) =>
     description: product?.description || '',
     boxContents: product?.boxContents || product?.includedParts || '',
     detailedSpecs: product?.detailedSpecs || product?.specificationsText || '',
+    hasColors: product ? (product.hasColors !== false && Array.isArray(product.availableColors) && product.availableColors.length > 0) : false,
+    colorsInput: Array.isArray(product?.availableColors) ? product.availableColors.join(', ') : (typeof product?.availableColors === 'string' ? product.availableColors : ''),
     inStock: product ? product.inStock !== false : true,
     remainingUnits: product?.remainingUnits !== undefined ? product.remainingUnits : 15,
     hidden: product ? (product.hidden === true || product.isVisible === false) : false,
@@ -205,6 +207,10 @@ const FullProductModal = ({ product = null, preset = null, onClose, onSave }) =>
       ? Number(formData.coinDiscountAmount)
       : Math.round(Number(formData.maxCoinsRedeemable || 500) / 5);
 
+    const cleanColors = formData.hasColors && formData.colorsInput
+      ? formData.colorsInput.split(',').map(s => s.trim()).filter(Boolean)
+      : [];
+
     const payload = {
       title: formData.title.trim(),
       name: formData.title.trim(),
@@ -217,6 +223,8 @@ const FullProductModal = ({ product = null, preset = null, onClose, onSave }) =>
       scale: formData.scale.trim(),
       brand: formData.brand.trim(),
       badge: formData.badge.trim(),
+      hasColors: Boolean(formData.hasColors && cleanColors.length > 0),
+      availableColors: cleanColors,
       allowCoinRedemption: Boolean(formData.allowCoinRedemption !== false),
       maxCoinsRedeemable: Number(formData.maxCoinsRedeemable !== undefined ? formData.maxCoinsRedeemable : 500),
       coinDiscountAmount: calculatedRupeeDiscount,
@@ -674,6 +682,37 @@ Available Colors: Yellow, Gray, Blue`}
                   onChange={(e) => setFormData({ ...formData, detailedSpecs: e.target.value })}
                   className="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-slate-900 focus:outline-none font-mono text-xs"
                 />
+              </div>
+
+              {/* Color Variants Control Section */}
+              <div className="bg-slate-50 border border-slate-200 p-4 rounded-2xl space-y-3">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <label className="font-extrabold text-slate-800 uppercase tracking-wider text-[11px] block">Enable Color Variants</label>
+                    <span className="text-[10px] text-slate-500">Allow customers to select product color swatches on storefront</span>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setFormData({ ...formData, hasColors: !formData.hasColors })}
+                    className={`w-12 h-6 flex items-center rounded-full p-1 cursor-pointer transition-colors duration-200 ${formData.hasColors ? 'bg-emerald-600 justify-end' : 'bg-slate-300 justify-start'}`}
+                  >
+                    <div className="bg-white w-4 h-4 rounded-full shadow-md"></div>
+                  </button>
+                </div>
+
+                {formData.hasColors && (
+                  <div>
+                    <label className="block text-slate-700 font-bold mb-1 uppercase tracking-wider text-[11px]">AVAILABLE COLORS (COMMA SEPARATED)</label>
+                    <input
+                      type="text"
+                      placeholder="Yellow, Gray, Blue, Black"
+                      value={formData.colorsInput}
+                      onChange={(e) => setFormData({ ...formData, colorsInput: e.target.value })}
+                      className="w-full bg-white border border-slate-200 rounded-xl p-3 text-slate-900 text-xs focus:outline-none font-bold"
+                    />
+                    <span className="text-[10px] text-slate-500 mt-1 block">Separate color options with commas. Example: Yellow, Gray, Blue</span>
+                  </div>
+                )}
               </div>
 
               <div className="bg-slate-50 border border-slate-200 p-4 rounded-2xl space-y-3">

@@ -2353,11 +2353,13 @@ export const StoreProvider = ({ children }) => {
   }, []);
 
   // Cart operations
-  const addToCart = useCallback((product, selectedAddons = []) => {
+  const addToCart = useCallback((product, selectedAddons = [], selectedColor = null) => {
+    const activeColor = selectedColor || product?.selectedColor || null;
+
     let extraPrice = 0;
     const addonNames = [];
 
-    if (selectedAddons.length > 0) {
+    if (Array.isArray(selectedAddons) && selectedAddons.length > 0) {
       selectedAddons.forEach(key => {
         if (addonsConfig[key]) {
           extraPrice += addonsConfig[key].price;
@@ -2367,7 +2369,9 @@ export const StoreProvider = ({ children }) => {
     }
 
     const itemPrice = product.price + extraPrice;
-    const cartItemId = `${product.id}-${selectedAddons.sort().join('-') || 'base'}`;
+    const addonsKey = Array.isArray(selectedAddons) ? selectedAddons.sort().join('-') : '';
+    const colorKey = activeColor ? String(activeColor).replace(/\s+/g, '_') : 'default';
+    const cartItemId = `${product.id}-${colorKey}-${addonsKey || 'base'}`;
 
     setCart(prevCart => {
       const existing = (prevCart || []).find(item => item.cartItemId === cartItemId);
@@ -2388,6 +2392,7 @@ export const StoreProvider = ({ children }) => {
             price: itemPrice,
             basePrice: product.price,
             selectedAddons: addonNames,
+            selectedColor: activeColor || null,
             qty: 1
           }
         ];

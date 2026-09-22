@@ -208,10 +208,22 @@ export const ProductDetailPage = () => {
     ? siblingCategoryProducts
     : [...siblingCategoryProducts, ...(products || []).filter(item => item && item.id !== product.id && !siblingCategoryProducts.some(sp => sp.id === item.id))].slice(0, 4);
 
+  const hasColorVariants = Boolean(product?.hasColors !== false && Array.isArray(product?.availableColors) && product.availableColors.length > 0);
+  const colorList = useMemo(() => (hasColorVariants ? product.availableColors : []), [hasColorVariants, product]);
+  const [selectedColor, setSelectedColor] = useState('');
+
+  useEffect(() => {
+    if (hasColorVariants && colorList.length > 0) {
+      setSelectedColor(colorList[0]);
+    } else {
+      setSelectedColor('');
+    }
+  }, [product, hasColorVariants, colorList]);
+
   const totalPrice = product.price || 0;
 
   const handleAddToCart = () => {
-    addToCart(product, []);
+    addToCart(product, [], selectedColor);
     setIsCartOpen(true);
   };
 
@@ -504,6 +516,56 @@ export const ProductDetailPage = () => {
                 </div>
               )}
             </div>
+
+            {/* Color Selection UI */}
+            {hasColorVariants && colorList.length > 0 && (
+              <div className="bg-slate-50 border border-slate-200 rounded-2xl p-4 space-y-2.5">
+                <div className="flex items-center justify-between text-xs">
+                  <span className="font-extrabold text-slate-900 uppercase tracking-wider flex items-center gap-1.5">
+                    🎨 SELECT COLOR
+                  </span>
+                  {selectedColor && (
+                    <span className="font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded-md text-[11px]">
+                      {selectedColor}
+                    </span>
+                  )}
+                </div>
+
+                <div className="flex flex-wrap gap-2 pt-1">
+                  {colorList.map((color, idx) => {
+                    const isSelected = selectedColor === color;
+                    return (
+                      <button
+                        key={idx}
+                        type="button"
+                        onClick={() => setSelectedColor(color)}
+                        className={`px-3.5 py-1.5 rounded-xl border text-xs font-bold transition-all cursor-pointer select-none flex items-center gap-1.5 ${
+                          isSelected
+                            ? 'bg-slate-900 text-white border-slate-900 ring-2 ring-emerald-500/30 shadow-md scale-105'
+                            : 'bg-white text-slate-700 border-slate-300 hover:border-slate-400 hover:bg-slate-100'
+                        }`}
+                      >
+                        <span
+                          className="w-2.5 h-2.5 rounded-full border border-white/50 shrink-0"
+                          style={{
+                            backgroundColor:
+                              color.toLowerCase().includes('blue') ? '#2563eb' :
+                              color.toLowerCase().includes('yellow') ? '#eab308' :
+                              color.toLowerCase().includes('green') ? '#16a34a' :
+                              color.toLowerCase().includes('red') ? '#dc2626' :
+                              color.toLowerCase().includes('black') ? '#0f172a' :
+                              color.toLowerCase().includes('gray') || color.toLowerCase().includes('grey') ? '#64748b' :
+                              color.toLowerCase().includes('white') ? '#f8fafc' :
+                              color.toLowerCase().includes('orange') ? '#ea580c' : '#10b981'
+                          }}
+                        />
+                        <span>{color}</span>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
 
           </div>
 
