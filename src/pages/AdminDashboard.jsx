@@ -143,8 +143,8 @@ const FullProductModal = ({ product = null, preset = null, onClose, onSave }) =>
     showVideoTab: product ? product.showVideoTab !== false : true,
     description: product?.description || '',
     boxContents: product?.boxContents || product?.includedParts || '',
-    detailedSpecs: product?.detailedSpecs || product?.specificationsText || '',
-    hasColors: product ? (product.hasColors !== false && Array.isArray(product.availableColors) && product.availableColors.length > 0) : false,
+    hasColors: product ? Boolean(product.hasColors && Array.isArray(product.availableColors) && product.availableColors.length > 0) : false,
+    availableColors: Array.isArray(product?.availableColors) ? product.availableColors : (typeof product?.availableColors === 'string' ? product.availableColors.split(',').map(c => c.trim()).filter(Boolean) : []),
     colorsInput: Array.isArray(product?.availableColors) ? product.availableColors.join(', ') : (typeof product?.availableColors === 'string' ? product.availableColors : ''),
     inStock: product ? product.inStock !== false : true,
     remainingUnits: product?.remainingUnits !== undefined ? product.remainingUnits : 15,
@@ -207,8 +207,12 @@ const FullProductModal = ({ product = null, preset = null, onClose, onSave }) =>
       ? Number(formData.coinDiscountAmount)
       : Math.round(Number(formData.maxCoinsRedeemable || 500) / 5);
 
-    const cleanColors = formData.hasColors && formData.colorsInput
-      ? formData.colorsInput.split(',').map(s => s.trim()).filter(Boolean)
+    const cleanColors = formData.hasColors
+      ? (Array.isArray(formData.availableColors) && formData.availableColors.length > 0
+          ? formData.availableColors
+          : (formData.colorsInput
+              ? formData.colorsInput.split(',').map(s => s.trim()).filter(Boolean)
+              : []))
       : [];
 
     const payload = {
@@ -506,6 +510,55 @@ const FullProductModal = ({ product = null, preset = null, onClose, onSave }) =>
                 <p className="text-[10px] text-amber-800 font-semibold italic pt-0.5">
                   Customer spends {formData.maxCoinsRedeemable || 100} coins and gets exactly ₹{formData.coinDiscountAmount !== undefined ? formData.coinDiscountAmount : Math.round((formData.maxCoinsRedeemable || 100) / 5)} off.
                 </p>
+              </div>
+
+              {/* DYNAMIC COLOR VARIANTS SECTION */}
+              <div className="mt-4 p-4 rounded-xl border border-slate-200 bg-slate-50/70 space-y-3">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <h4 className="font-semibold text-sm text-slate-900">Product Color Variants</h4>
+                    <p className="text-xs text-slate-500">Enable if this toy/car has multiple color choices for buyers.</p>
+                  </div>
+                  <label className="relative inline-flex items-center cursor-pointer">
+                    <input 
+                      type="checkbox" 
+                      checked={Boolean(formData.hasColors)} 
+                      onChange={(e) => setFormData(prev => ({ 
+                        ...prev, 
+                        hasColors: e.target.checked,
+                        availableColors: e.target.checked ? (prev.availableColors?.length ? prev.availableColors : ['Blue', 'Yellow', 'Green']) : []
+                      }))}
+                      className="sr-only peer"
+                    />
+                    <div className="w-11 h-6 bg-slate-300 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-emerald-500"></div>
+                  </label>
+                </div>
+
+                {formData.hasColors && (
+                  <div className="mt-3 pt-3 border-t border-slate-200 space-y-2">
+                    <label className="block text-xs font-medium text-slate-900 mb-1">
+                      Available Colors (comma separated)
+                    </label>
+                    <input 
+                      type="text" 
+                      value={Array.isArray(formData.availableColors) ? formData.availableColors.join(', ') : (formData.availableColors || '')} 
+                      onChange={(e) => {
+                        const raw = e.target.value;
+                        const arr = raw.split(',').map(c => c.trim()).filter(Boolean);
+                        setFormData(prev => ({ ...prev, availableColors: arr }));
+                      }}
+                      placeholder="e.g. Blue, Yellow, Green, Black" 
+                      className="w-full text-sm px-3 py-2 rounded-lg border border-slate-200 bg-white focus:ring-2 focus:ring-emerald-500 outline-none font-medium"
+                    />
+                    <div className="flex gap-1.5 mt-2 flex-wrap">
+                      {(Array.isArray(formData.availableColors) ? formData.availableColors : []).map((col, idx) => (
+                        <span key={idx} className="text-xs px-2.5 py-1 rounded-md bg-emerald-100 text-emerald-900 font-medium border border-emerald-200">
+                          🎨 {col}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                )}
               </div>
 
             </div>
