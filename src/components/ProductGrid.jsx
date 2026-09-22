@@ -24,19 +24,20 @@ export const ProductGrid = ({ limit, useLatestRcOnly }) => {
   };
 
   // Determine if a category filter is active
-  const isFiltered = selectedCategory && selectedCategory !== 'ALL' && selectedCategory !== 'all';
+  const selCatStr = typeof selectedCategory === 'string' ? selectedCategory : (selectedCategory?.name || selectedCategory?.label || 'ALL');
+  const isFiltered = selCatStr && selCatStr !== 'ALL' && selCatStr !== 'all';
 
   // Extract scale tag if selected category is a scale (e.g. '1:64 Scale', '1:64', '1:43 Scale', etc.)
-  const activeScaleMatch = isFiltered ? selectedCategory.replace(' Scale', '').trim() : null;
+  const activeScaleMatch = isFiltered ? selCatStr.replace(' Scale', '').trim() : null;
 
   // Primary filtered products
   const displayProducts = useMemo(() => {
     if (isFiltered) {
-      return (products || []).filter(p => {
-        if (p.hidden === true || p.isVisible === false) return false;
-        const pScale = (p.scale || '').toLowerCase();
-        const pCat = (p.category || '').toLowerCase();
-        const sel = selectedCategory.toLowerCase();
+      return (products || []).filter(Boolean).filter(p => {
+        if (!p || p.hidden === true || p.isVisible === false) return false;
+        const pScale = typeof p.scale === 'string' ? p.scale.toLowerCase() : (p.scale?.name || '').toLowerCase();
+        const pCat = typeof p.category === 'string' ? p.category.toLowerCase() : (p.category?.name || '').toLowerCase();
+        const sel = selCatStr.toLowerCase();
         const matchTag = (activeScaleMatch || '').toLowerCase();
         return pScale.includes(sel) || (matchTag && pScale.includes(matchTag)) || pCat === sel || (matchTag && pCat.includes(matchTag));
       });
@@ -44,9 +45,9 @@ export const ProductGrid = ({ limit, useLatestRcOnly }) => {
 
     if (useLatestRcOnly || limit) {
       // 1. Strict Exclusion of Scale Models
-      const nonScaleProducts = (products || []).filter(p => {
+      const nonScaleProducts = (products || []).filter(Boolean).filter(p => {
         if (!p || p.hidden === true || p.isVisible === false) return false;
-        const cat = (p.category || '').toLowerCase().trim();
+        const cat = typeof p.category === 'string' ? p.category.toLowerCase().trim() : (p.category?.name || '').toLowerCase().trim();
         return (
           cat !== 'scale models' &&
           cat !== 'scale model' &&
@@ -57,22 +58,22 @@ export const ProductGrid = ({ limit, useLatestRcOnly }) => {
 
       // 2. Filter Featured Flagship Cars
       const featured = nonScaleProducts.filter(p =>
-        p.isFeatured === true || p.featured === true || p.featuredOnHome === true
+        p && (p.isFeatured === true || p.featured === true || p.featuredOnHome === true)
       );
 
       const finalSource = featured.length > 0 ? featured : nonScaleProducts;
       return finalSource.slice(0, Math.min(limit || 10, 10));
     }
 
-    return (products || []).filter(p => p.hidden !== true && p.isVisible !== false);
-  }, [isFiltered, products, selectedCategory, activeScaleMatch, useLatestRcOnly, limit]);
+    return (products || []).filter(Boolean).filter(p => p && p.hidden !== true && p.isVisible !== false);
+  }, [isFiltered, products, selCatStr, activeScaleMatch, useLatestRcOnly, limit]);
 
   // Apply limit if passed (capped strictly to 10 models max for latest showcase)
   const visibleProducts = limit ? displayProducts.slice(0, Math.min(limit, 10)) : displayProducts;
 
   // Secondary non-filtered products ("More From MJ RC BASE")
   const secondaryProducts = isFiltered
-    ? (products || []).filter(p => p.hidden !== true && p.isVisible !== false && !displayProducts.some(dp => dp.id === p.id))
+    ? (products || []).filter(Boolean).filter(p => p && p.hidden !== true && p.isVisible !== false && !displayProducts.some(dp => dp && dp.id === p.id))
     : [];
 
   return (
@@ -92,7 +93,7 @@ export const ProductGrid = ({ limit, useLatestRcOnly }) => {
 
               {/* Title */}
               <h2 className="text-2xl sm:text-3xl font-black text-slate-900 tracking-tight flex items-center gap-2">
-                {selectedCategory.includes('1:64') || selectedCategory === 'Scale Models' ? 'Scale Models Precision Series' : `${selectedCategory} Precision Series`}
+                {selCatStr.includes('1:64') || selCatStr === 'Scale Models' ? 'Scale Models Precision Series' : `${selCatStr} Precision Series`}
               </h2>
               <p className="text-xs sm:text-sm text-slate-600 font-medium mt-1">
                 Showing {displayProducts.length} bench-tested scale models ready for 24H Mysore Hub dispatch.
@@ -164,7 +165,7 @@ export const ProductGrid = ({ limit, useLatestRcOnly }) => {
       {visibleProducts.length === 0 ? (
         <div className="bg-white border border-slate-200 rounded-3xl p-10 text-center my-6 shadow-xs">
           <div className="text-3xl mb-2">🏎️</div>
-          <h3 className="text-base font-black text-slate-900 mb-1">No products found for "{selectedCategory}"</h3>
+          <h3 className="text-base font-black text-slate-900 mb-1">No products found for "{selCatStr}"</h3>
           <p className="text-xs text-slate-600 mb-4">Explore other scale sizes or reset to view our full collection.</p>
           <button
             onClick={() => setSelectedCategory('ALL')}

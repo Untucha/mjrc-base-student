@@ -101,3 +101,33 @@ export const getEffectiveUserCoins = (user = null) => {
     expiryTimestamp: rawExpiryDate
   };
 };
+
+/**
+ * Safe String Extractor (Fix React Error #310 for Objects rendered as children)
+ */
+export const safeString = (val, fallback = '') => {
+  if (val === undefined || val === null) return fallback;
+  if (typeof val === 'string') return val;
+  if (typeof val === 'number' || typeof val === 'boolean') return String(val);
+  if (typeof val === 'object') {
+    return safeString(val.name || val.label || val.title || val.id || fallback, fallback);
+  }
+  return String(val);
+};
+
+/**
+ * Safe Category Normalizer for Deleted/Legacy Category compatibility
+ */
+export const safeCategoryName = (catInput, fallback = 'Bashers and Monster') => {
+  const str = safeString(catInput, '');
+  if (!str) return fallback;
+  const norm = str.toLowerCase().trim();
+  if (norm.includes('crawler')) return 'RC Crawlers';
+  if (norm.includes('pickup') || norm.includes('trail')) return 'Trail Pickups';
+  if (norm.includes('drift') || norm.includes('rally')) return 'Drift and Rally';
+  if (norm.includes('basher') || norm.includes('monster') || norm.includes('mini') || norm.includes('boat')) return 'Bashers and Monster';
+  if (norm.includes('heavy') || norm.includes('machinery') || norm.includes('construction')) return 'Heavy Machinery';
+  if (norm.includes('short') || norm.includes('course') || norm.includes('race')) return 'Short course';
+  return str || fallback;
+};
+

@@ -80,7 +80,7 @@ export const AllProductsPage = () => {
     }
 
     if (activeZone === 'category') {
-      return ['ALL', 'RC Crawlers', 'Mini RC Cars', 'Drift RC', 'RC Boats', 'Monster Trucks', 'RC Heavy Machinery'];
+      return ['ALL', 'RC Crawlers', 'Trail Pickups', 'Drift and Rally', 'Bashers and Monster', 'Heavy Machinery', 'Short course'];
     }
 
     if (activeZone === 'scale_models') {
@@ -91,7 +91,7 @@ export const AllProductsPage = () => {
   }, [activeZone, liveList]);
 
   // Master Filter Engine
-  let filteredProducts = liveList.filter(p => {
+  let filteredProducts = (liveList || []).filter(p => {
     if (!p || p.hidden === true || p.isVisible === false) return false;
 
     // 1. Primary Zone Filtering
@@ -121,7 +121,7 @@ export const AllProductsPage = () => {
       } else if (activeZone === 'category') {
         const pCat = (p.category || '').toLowerCase().trim();
         const selCat = subFilter.toLowerCase().trim();
-        if (pCat !== selCat) return false;
+        if (pCat !== selCat && !pCat.includes(selCat) && !selCat.includes(pCat)) return false;
       } else if (activeZone === 'scale_models') {
         const pScale = (p.scale || '').toLowerCase().trim();
         const selScale = subFilter.toLowerCase().trim();
@@ -195,7 +195,7 @@ export const AllProductsPage = () => {
         
         {/* MOBILE VIEW: Touch-optimized 2-column Grid (md:hidden) */}
         <div className="grid grid-cols-2 gap-1.5 p-1.5 bg-slate-50/80 rounded-xl border border-slate-200/80 md:hidden">
-          {PRIMARY_ZONES.map(zone => (
+          {(PRIMARY_ZONES || []).map(zone => (
             <button
               key={zone.id}
               onClick={() => handleZoneChange(zone.id)}
@@ -214,7 +214,7 @@ export const AllProductsPage = () => {
         {/* DESKTOP VIEW: Segmented Row Switcher (hidden md:flex) */}
         <div className="hidden md:flex items-center gap-1.5 overflow-x-auto no-scrollbar pb-1">
           <span className="text-xs font-black text-slate-400 uppercase tracking-wider shrink-0 mr-1">Zone:</span>
-          {PRIMARY_ZONES.map(zone => (
+          {(PRIMARY_ZONES || []).map(zone => (
             <button
               key={zone.id}
               onClick={() => handleZoneChange(zone.id)}
@@ -236,7 +236,7 @@ export const AllProductsPage = () => {
             <span className="text-[11px] font-black text-emerald-700 uppercase tracking-wider shrink-0 flex items-center gap-1">
               <Filter className="w-3 h-3 text-emerald-600" /> Filter:
             </span>
-            {subFilterOptions.map(opt => {
+            {(subFilterOptions || []).map(opt => {
               const isAll = opt === 'ALL';
               const label = isAll
                 ? (activeZone === 'speed_scale' ? 'All Speed & Scale' : activeZone === 'crawler' ? 'All Crawlers' : activeZone === 'category' ? 'All Categories' : activeZone === 'scale_models' ? 'All Scale Models' : 'All Scales')
@@ -283,8 +283,8 @@ export const AllProductsPage = () => {
         </div>
       ) : (
         <div className="grid grid-cols-2 gap-3 sm:gap-6 lg:grid-cols-4">
-          {filteredProducts.map((product) => (
-            <ProductCard key={product.id} product={product} />
+          {(filteredProducts || []).filter(Boolean).map((product) => (
+            <ProductCard key={product.id || product._id} product={product} />
           ))}
         </div>
       )}

@@ -81,7 +81,7 @@ export const ProductCard = ({ product, onMoveToCart, showMoveToCart = false }) =
         {/* Scale Badge (Bottom-Left) */}
         {product.scale && (
           <div className="absolute bottom-2.5 left-2.5 z-10 bg-white/90 backdrop-blur-sm border border-slate-200 text-emerald-800 text-[10px] font-extrabold px-2 py-0.5 rounded-md uppercase tracking-wider shadow-xs">
-            {product.scale}
+            {typeof product.scale === 'string' ? product.scale : (product.scale?.name || String(product.scale))}
           </div>
         )}
       </div>
@@ -92,16 +92,16 @@ export const ProductCard = ({ product, onMoveToCart, showMoveToCart = false }) =
           {/* Brand & Rating Row */}
           <div className="flex items-center justify-between text-xs mb-1 font-semibold">
             <span className="text-[10px] uppercase font-bold text-slate-400 tracking-wider truncate max-w-[65%]">
-              {product.brand}
+              {typeof product.brand === 'string' ? product.brand : (product.brand?.name || product.brand?.label || '')}
             </span>
             <span className="flex items-center gap-0.5 text-amber-900 bg-amber-50 border border-amber-200 px-1.5 py-0.5 rounded-md text-[9px] sm:text-[10px] font-extrabold shrink-0">
-              <Star className="w-3 h-3 fill-amber-400 text-amber-500" /> {product.rating || 4.9}
+              <Star className="w-3 h-3 fill-amber-400 text-amber-500" /> {typeof product.rating === 'number' || typeof product.rating === 'string' ? product.rating : 4.9}
             </span>
           </div>
 
           {/* Title */}
           <h3 className="text-xs sm:text-sm font-bold text-slate-800 line-clamp-1 sm:line-clamp-2 leading-snug group-hover:text-emerald-700 transition-colors">
-            {product.title || product.name}
+            {typeof product.title === 'string' ? product.title : (typeof product.name === 'string' ? product.name : (product.title?.title || product.name?.name || 'RC Vehicle'))}
           </h3>
 
           {/* Coins & Special Exempt Badge */}
@@ -112,7 +112,7 @@ export const ProductCard = ({ product, onMoveToCart, showMoveToCart = false }) =
           ) : (
             <div className="mt-1.5 inline-flex items-center gap-1 text-[9px] sm:text-[10px] font-bold text-amber-900 bg-amber-50 border border-amber-200 px-1.5 sm:px-2 py-0.5 rounded-md">
               <Coins className="w-3 h-3 text-amber-500" />
-              <span>Earn {product.coinsRewardedOnPurchase || product.rcCoins || 100} Coins</span>
+              <span>Earn {typeof (product.coinsRewardedOnPurchase || product.rcCoins) === 'number' ? (product.coinsRewardedOnPurchase || product.rcCoins) : 100} Coins</span>
             </div>
           )}
         </div>

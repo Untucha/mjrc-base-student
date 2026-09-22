@@ -62,11 +62,15 @@ export const CATEGORIES = [
 export const CategoryShowcase = () => {
   const { categories = CATEGORIES, categoriesList, selectedCategory, setSelectedCategory } = useStore();
 
-  const activeCategories = (categoriesList && categoriesList.length > 0 ? categoriesList : (categories || CATEGORIES || [])).filter(c => c.isVisible !== false);
+  const activeCategories = (categoriesList && categoriesList.length > 0 ? categoriesList : (categories || CATEGORIES || []))
+    .filter(Boolean)
+    .filter(c => c && typeof c === 'object' && c.isVisible !== false);
 
   const renderCard = (cat, isMobile = false) => {
-    const isSelected = selectedCategory === cat.name;
-    const slug = (cat.slug || cat.id || cat.name || cat.label || '').toLowerCase().trim().replace(/\s+/g, '-');
+    if (!cat || typeof cat !== 'object') return null;
+    const catName = typeof cat.name === 'string' ? cat.name : (typeof cat.label === 'string' ? cat.label : (cat.name?.name || cat.label?.label || 'Category'));
+    const isSelected = selectedCategory === catName;
+    const slug = (cat.slug || cat.id || catName || '').toLowerCase().trim().replace(/\s+/g, '-');
     const coverImg = cat.imageUrl || cat.image || 'https://images.unsplash.com/photo-1594787318286-3d835c1d207f?auto=format&fit=crop&w=300&q=80';
 
     return (
@@ -75,7 +79,7 @@ export const CategoryShowcase = () => {
         to={`/category/${slug}`}
         state={{ returnSection: 'shop-by-category' }}
         onClick={() => {
-          if (setSelectedCategory && cat.name) setSelectedCategory(cat.name);
+          if (setSelectedCategory && catName) setSelectedCategory(catName);
           if (typeof window !== 'undefined') {
             sessionStorage.setItem('returnSection', 'shop-by-category');
           }
@@ -93,14 +97,14 @@ export const CategoryShowcase = () => {
           src={coverImg}
           loading="lazy"
           decoding="async"
-          alt={cat.name || cat.label}
+          alt={catName}
           className="w-full h-full object-cover object-center group-hover:scale-105 transition-transform duration-500 pointer-events-none"
         />
 
         {/* Sleek Bottom Dark Gradient Overlay */}
         <div className="absolute inset-x-0 bottom-0 p-3 sm:p-4 pt-8 sm:pt-10 bg-gradient-to-t from-black/85 via-black/40 to-transparent flex flex-col justify-end pointer-events-none">
           <h3 className="text-white font-extrabold text-xs sm:text-base tracking-wide drop-shadow-md text-center sm:text-left leading-tight">
-            {cat.name || cat.label}
+            {catName}
           </h3>
         </div>
       </Link>
@@ -127,12 +131,12 @@ export const CategoryShowcase = () => {
 
       {/* Mobile Viewport: Horizontal Swipe Carousel (Single Row) */}
       <div className="flex md:hidden flex-row gap-3 overflow-x-auto no-scrollbar scroll-smooth px-1 py-1 snap-x">
-        {activeCategories.map((cat) => renderCard(cat, true))}
+        {(activeCategories || []).filter(Boolean).map((cat) => renderCard(cat, true))}
       </div>
 
       {/* Desktop / Laptop Viewport: Multi-Column Grid */}
       <div className="hidden md:grid md:grid-cols-4 lg:grid-cols-6 xl:grid-cols-8 gap-4">
-        {activeCategories.map((cat) => renderCard(cat, false))}
+        {(activeCategories || []).filter(Boolean).map((cat) => renderCard(cat, false))}
       </div>
     </section>
   );

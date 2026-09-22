@@ -620,7 +620,7 @@ export const ProductDetailPage = () => {
               <div className="flex items-center gap-2">
                 <span className="text-xl">⚡</span>
                 <h3 className="text-xl sm:text-2xl font-black text-slate-900 tracking-tight">
-                  More in {product.category} Series
+                  More in {typeof product.category === 'string' ? product.category : (product.category?.name || product.category?.label || 'RC Models')} Series
                 </h3>
                 {siblingCategoryProducts.length > 0 && (
                   <span className="bg-emerald-50 text-emerald-800 text-[10px] font-extrabold px-2.5 py-0.5 rounded-full border border-emerald-200">
@@ -634,10 +634,10 @@ export const ProductDetailPage = () => {
             </div>
 
             <Link
-              to={`/category/${product.category.toLowerCase().replace(/[:-\s]+/g, '-')}`}
+              to={`/category/${(typeof product.category === 'string' ? product.category : (product.category?.name || product.category?.label || 'all')).toLowerCase().replace(/[:-\s]+/g, '-')}`}
               className="text-xs font-extrabold text-emerald-700 hover:text-emerald-800 hidden sm:inline-flex items-center gap-1 transition-colors"
             >
-              <span>View All {product.category} →</span>
+              <span>View All {typeof product.category === 'string' ? product.category : (product.category?.name || product.category?.label || 'RC Models')} →</span>
             </Link>
           </div>
 

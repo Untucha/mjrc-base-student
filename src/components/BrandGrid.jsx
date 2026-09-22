@@ -276,11 +276,11 @@ export const BrandGrid = () => {
 
       {/* 2-column mobile / 3-column tablet / 4-to-5 column desktop grid */}
       <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3.5">
-        {visibleBrands.map((brand, idx) => {
+        {(visibleBrands || []).filter(Boolean).map((brand, idx) => {
           const brandName = typeof brand === 'string' ? brand : (brand?.name || 'RC Brand');
           const brandId = typeof brand === 'string' ? `brand-${idx}` : (brand?.id || `brand-${idx}`);
-          const logoUrl = typeof brand === 'object' ? (brand.logoUrl || brand.logo) : null;
-          const matchedStaticBrand = typeof brand === 'string' ? BRANDS.find(b => b.name.toLowerCase() === brand.toLowerCase()) : null;
+          const logoUrl = (brand && typeof brand === 'object') ? (brand.logoUrl || brand.logo) : null;
+          const matchedStaticBrand = typeof brand === 'string' ? (BRANDS || []).find(b => b && b.name && b.name.toLowerCase() === brand.toLowerCase()) : null;
 
           return (
             <Link
