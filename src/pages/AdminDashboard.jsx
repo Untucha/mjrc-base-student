@@ -2462,10 +2462,10 @@ export const AdminDashboard = () => {
   };
 
   const [integrationsForm, setIntegrationsForm] = useState({
+    shiprocketEmail: '',
     shiprocketEmailToken: '',
-    shiprocketWarehousePincode: '',
-    razorpayKeyId: '',
-    razorpayKeySecret: ''
+    shiprocketCheckoutApiKey: '',
+    shiprocketWarehousePincode: ''
   });
   const [isSavingIntegrations, setIsSavingIntegrations] = useState(false);
 
@@ -4743,25 +4743,47 @@ export const AdminDashboard = () => {
               </div>
             </div>
 
-            {/* Logistics & Payment Gateway Credentials Vault */}
+            {/* Shiprocket Unified Logistics & Payment Credentials Vault */}
             <div className="bg-white border border-slate-200/80 rounded-3xl p-6 shadow-xs space-y-4">
               <div>
                 <h3 className="font-black text-lg text-slate-900 flex items-center gap-2">
-                  <Lock className="w-5 h-5 text-emerald-600" /> Logistics & Payment Gateway Credentials Vault
+                  <Lock className="w-5 h-5 text-emerald-600" /> Shiprocket Unified Logistics & Payment Credentials Vault
                 </h3>
                 <p className="text-xs text-slate-500 font-semibold mt-0.5">
-                  Configure Shiprocket & Razorpay credentials synced directly to Firestore <code className="text-emerald-700 bg-emerald-50 px-1 py-0.5 rounded font-mono">crm_settings/integrations</code>
+                  Configure Shiprocket API & Payment credentials synced directly to Firestore <code className="text-emerald-700 bg-emerald-50 px-1 py-0.5 rounded font-mono">crm_settings/integrations</code>
                 </p>
               </div>
 
               <form onSubmit={handleSaveIntegrations} className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs font-bold">
                 <div>
-                  <label className="block text-slate-700 mb-1 uppercase tracking-wider text-[10px]">Shiprocket API Email / Token</label>
+                  <label className="block text-slate-700 mb-1 uppercase tracking-wider text-[10px]">Shiprocket API Email / Username</label>
                   <input
                     type="text"
+                    placeholder="admin@mjrc.in"
+                    value={integrationsForm.shiprocketEmail || ''}
+                    onChange={(e) => setIntegrationsForm(prev => ({ ...prev, shiprocketEmail: e.target.value }))}
+                    className="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 font-mono text-slate-900 focus:outline-none focus:bg-white"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-slate-700 mb-1 uppercase tracking-wider text-[10px]">Shiprocket API Password / Token</label>
+                  <input
+                    type="password"
                     placeholder="token_abc123..."
                     value={integrationsForm.shiprocketEmailToken || ''}
                     onChange={(e) => setIntegrationsForm(prev => ({ ...prev, shiprocketEmailToken: e.target.value }))}
+                    className="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 font-mono text-slate-900 focus:outline-none focus:bg-white"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-slate-700 mb-1 uppercase tracking-wider text-[10px]">Shiprocket Checkout API Key</label>
+                  <input
+                    type="text"
+                    placeholder="sr_live_key_..."
+                    value={integrationsForm.shiprocketCheckoutApiKey || ''}
+                    onChange={(e) => setIntegrationsForm(prev => ({ ...prev, shiprocketCheckoutApiKey: e.target.value }))}
                     className="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 font-mono text-slate-900 focus:outline-none focus:bg-white"
                   />
                 </div>
@@ -4773,28 +4795,6 @@ export const AdminDashboard = () => {
                     placeholder="570001 (Mysore Main Warehouse)"
                     value={integrationsForm.shiprocketWarehousePincode || ''}
                     onChange={(e) => setIntegrationsForm(prev => ({ ...prev, shiprocketWarehousePincode: e.target.value }))}
-                    className="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 font-mono text-slate-900 focus:outline-none focus:bg-white"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-slate-700 mb-1 uppercase tracking-wider text-[10px]">Razorpay Key ID</label>
-                  <input
-                    type="text"
-                    placeholder="rzp_live_..."
-                    value={integrationsForm.razorpayKeyId || ''}
-                    onChange={(e) => setIntegrationsForm(prev => ({ ...prev, razorpayKeyId: e.target.value }))}
-                    className="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 font-mono text-slate-900 focus:outline-none focus:bg-white"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-slate-700 mb-1 uppercase tracking-wider text-[10px]">Razorpay Key Secret</label>
-                  <input
-                    type="password"
-                    placeholder="••••••••••••"
-                    value={integrationsForm.razorpayKeySecret || ''}
-                    onChange={(e) => setIntegrationsForm(prev => ({ ...prev, razorpayKeySecret: e.target.value }))}
                     className="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 font-mono text-slate-900 focus:outline-none focus:bg-white"
                   />
                 </div>
@@ -5097,7 +5097,7 @@ const handleDownloadShippingLabel = (order) => {
   const grossWt = order.weightKg || 1.2;
   const volWt = order.volumetricWeightKg || 1.68;
   const dimensions = `${order.lengthCm || 35}x${order.breadthCm || 20}x${order.heightCm || 15} cm`;
-  const payMode = order.paymentMethod || order.paymentMode || 'Prepaid (Razorpay UPI)';
+  const payMode = order.paymentMethod || order.paymentMode || 'Prepaid (Shiprocket Gateway)';
 
   const htmlContent = `
     <!DOCTYPE html>
@@ -5238,7 +5238,7 @@ const ShiprocketDispatchModal = ({ order, onClose, onConfirmDispatch, integratio
   const custName = order.customerName || order.userName || order.name || 'RC Driver';
   const addressStr = order.shippingAddress || order.address || 'Address on file';
   const pincode = order.pincode || order.zipCode || integrationsForm?.shiprocketWarehousePincode || '';
-  const payMode = order.paymentMethod || order.paymentMode || 'Prepaid (Razorpay UPI)';
+  const payMode = order.paymentMethod || order.paymentMode || 'Prepaid (Shiprocket Gateway)';
   const orderTotal = Number(order.total || order.grandTotal) || 0;
 
   const handleConfirm = async (e) => {
@@ -5532,13 +5532,23 @@ const OrderFulfillmentDrawer = ({
         {showIntegrations && (
           <div className="p-5 bg-emerald-50/40 border-b border-emerald-100 space-y-3 shrink-0">
             <div className="font-black text-xs text-emerald-900 uppercase tracking-wider flex items-center gap-2">
-              <Lock size={14} className="text-emerald-600" /> Logistics & Gateway Credentials Vault (Saved to `crm_settings/integrations`)
+              <Lock size={14} className="text-emerald-600" /> Shiprocket Unified Logistics & Payment Credentials Vault (Saved to `crm_settings/integrations`)
             </div>
             <form onSubmit={onSaveIntegrations} className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs font-bold">
               <div>
-                <label className="block text-slate-700 mb-1">Shiprocket API Email / Token</label>
+                <label className="block text-slate-700 mb-1">Shiprocket API Email / Username</label>
                 <input
                   type="text"
+                  placeholder="admin@mjrc.in"
+                  value={integrationsForm.shiprocketEmail || ''}
+                  onChange={(e) => setIntegrationsForm(prev => ({ ...prev, shiprocketEmail: e.target.value }))}
+                  className="w-full bg-white border border-slate-200 rounded-xl p-2.5 font-mono text-slate-900"
+                />
+              </div>
+              <div>
+                <label className="block text-slate-700 mb-1">Shiprocket API Password / Token</label>
+                <input
+                  type="password"
                   placeholder="token_abc123..."
                   value={integrationsForm.shiprocketEmailToken || ''}
                   onChange={(e) => setIntegrationsForm(prev => ({ ...prev, shiprocketEmailToken: e.target.value }))}
@@ -5546,32 +5556,22 @@ const OrderFulfillmentDrawer = ({
                 />
               </div>
               <div>
-                <label className="block text-slate-700 mb-1">Shiprocket Warehouse Pincode</label>
+                <label className="block text-slate-700 mb-1">Shiprocket Checkout API Key</label>
+                <input
+                  type="text"
+                  placeholder="sr_live_key_..."
+                  value={integrationsForm.shiprocketCheckoutApiKey || ''}
+                  onChange={(e) => setIntegrationsForm(prev => ({ ...prev, shiprocketCheckoutApiKey: e.target.value }))}
+                  className="w-full bg-white border border-slate-200 rounded-xl p-2.5 font-mono text-slate-900"
+                />
+              </div>
+              <div>
+                <label className="block text-slate-700 mb-1">Shiprocket Warehouse Pincode / Location</label>
                 <input
                   type="text"
                   placeholder="570001"
                   value={integrationsForm.shiprocketWarehousePincode || ''}
                   onChange={(e) => setIntegrationsForm(prev => ({ ...prev, shiprocketWarehousePincode: e.target.value }))}
-                  className="w-full bg-white border border-slate-200 rounded-xl p-2.5 font-mono text-slate-900"
-                />
-              </div>
-              <div>
-                <label className="block text-slate-700 mb-1">Razorpay Key ID</label>
-                <input
-                  type="text"
-                  placeholder="rzp_live_..."
-                  value={integrationsForm.razorpayKeyId || ''}
-                  onChange={(e) => setIntegrationsForm(prev => ({ ...prev, razorpayKeyId: e.target.value }))}
-                  className="w-full bg-white border border-slate-200 rounded-xl p-2.5 font-mono text-slate-900"
-                />
-              </div>
-              <div>
-                <label className="block text-slate-700 mb-1">Razorpay Key Secret</label>
-                <input
-                  type="password"
-                  placeholder="••••••••••••"
-                  value={integrationsForm.razorpayKeySecret || ''}
-                  onChange={(e) => setIntegrationsForm(prev => ({ ...prev, razorpayKeySecret: e.target.value }))}
                   className="w-full bg-white border border-slate-200 rounded-xl p-2.5 font-mono text-slate-900"
                 />
               </div>

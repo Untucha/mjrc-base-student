@@ -189,7 +189,7 @@ export const triggerOrderConfirmation = async (order, config = {}) => {
   const encodedOrderRef = encodeURIComponent(`Hi MJ RC Support, I need replacement & defect policy assistance for Order #${order.id}`);
   const replacementSupportUrl = `https://wa.me/919686078395?text=${encodedOrderRef}`;
 
-  const orderText = `📦 Order Confirmed & Bench-Tested! Order #${order.id}\n\nHi ${order.customerName || 'Racer'},\n\nYour primary machine:\n🚘 ${primaryTitle}\n\nOrder Items:\n${itemsSummary}\n\n💰 Total Paid: ₹${(order.total || 0).toLocaleString('en-IN')}\n💳 Payment: ${order.paymentMethod || 'Razorpay Prepaid'}\n\n🚚 Shiprocket Live Tracking: ${trackingUrl}\n🏷️ AWB: ${awb}\n\n🛠️ Replacement & Defect Policy Support:\nNeed assistance or bench-testing report? Tap to chat with support: ${replacementSupportUrl}`;
+  const orderText = `📦 Order Confirmed & Bench-Tested! Order #${order.id}\n\nHi ${order.customerName || 'Racer'},\n\nYour primary machine:\n🚘 ${primaryTitle}\n\nOrder Items:\n${itemsSummary}\n\n💰 Total Paid: ₹${(order.total || 0).toLocaleString('en-IN')}\n💳 Payment: ${order.paymentMethod || 'Shiprocket Prepaid'}\n\n🚚 Shiprocket Live Tracking: ${trackingUrl}\n🏷️ AWB: ${awb}\n\n🛠️ Replacement & Defect Policy Support:\nNeed assistance or bench-testing report? Tap to chat with support: ${replacementSupportUrl}`;
 
   return await sendCloudWhatsAppMessage({
     phone: order.mobile || order.phone,

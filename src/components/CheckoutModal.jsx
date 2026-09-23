@@ -47,19 +47,7 @@ const loadShiprocketScript = () => {
   });
 };
 
-const loadRazorpayScript = () => {
-  return new Promise((resolve) => {
-    if (typeof window !== 'undefined' && window.Razorpay) {
-      resolve(true);
-      return;
-    }
-    const script = document.createElement('script');
-    script.src = 'https://checkout.razorpay.com/v1/checkout.js';
-    script.onload = () => resolve(true);
-    script.onerror = () => resolve(false);
-    document.body.appendChild(script);
-  });
-};
+
 
 const parsePaymentServerResponse = async (res, showToast) => {
   const contentType = res.headers.get('content-type') || '';
@@ -198,7 +186,7 @@ export const CheckoutModal = () => {
   const discountAmount = actualRupeeDiscount;
   const finalPayableTotal = Math.max(0, cartSubtotal - discountAmount);
 
-  // Payment method selector: 'upi' | 'razorpay' | 'cod'
+  // Payment method selector: 'upi' | 'shiprocket' | 'cod'
   const [paymentMethod, setPaymentMethod] = useState('upi');
   const [selectedUpiApp, setSelectedUpiApp] = useState('gpay');
 
@@ -245,8 +233,8 @@ export const CheckoutModal = () => {
     const isUpi = paymentMethod === 'upi';
     const paymentLabel = isUpi
       ? `UPI Online (${selectedUpiApp.toUpperCase()})`
-      : paymentMethod === 'razorpay'
-      ? 'Credit / Debit Card Online'
+      : paymentMethod === 'shiprocket'
+      ? 'Shiprocket Instant Gateway'
       : 'Partial COD (₹200 Advance Paid)';
 
     const cleanAddressStr = `${flatAddress.trim()}, ${streetLandmark.trim()}, ${city.trim()}, ${stateName.trim()} - ${pincode.trim()}`;
@@ -270,7 +258,7 @@ export const CheckoutModal = () => {
     }
 
     // 2. SECURE SHIPROCKET PRIMARY PAYMENT GATEWAY FLOW (UPI, Cards, Wallets)
-    if (paymentMethod === 'razorpay' || paymentMethod === 'upi' || paymentMethod === 'shiprocket') {
+    if (paymentMethod === 'upi' || paymentMethod === 'shiprocket') {
       try {
         const createRes = await fetch('/api/payment/create-order', {
           method: 'POST',
@@ -378,74 +366,9 @@ export const CheckoutModal = () => {
           }
           return;
         }
-
-        // Razorpay fallback if explicitly set to razorpay
-        const isLoaded = await loadRazorpayScript();
-        if (!isLoaded) {
-          setError('Razorpay SDK failed to load. Please check network connection.');
-          setIsProcessing(false);
-          return;
-        }
-
-        const options = {
-          key: orderData.keyId,
-          amount: orderData.amount,
-          currency: orderData.currency || 'INR',
-          name: 'MJ RC BASE',
-          description: 'Hobby RC Machines & Accessories',
-          order_id: orderData.orderId,
-          prefill: {
-            name: customerName,
-            contact: pure10Phone
-          },
-          theme: {
-            color: '#0F172A'
-          },
-          modal: {
-            ondismiss: function () {
-              handleShiprocketDismiss('dismissed_by_user');
-            }
-          },
-          handler: async function (response) {
-            try {
-              setIsProcessing(true);
-              const verifyRes = await fetch('/api/payment/verify-signature', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                  razorpay_order_id: response.razorpay_order_id,
-                  razorpay_payment_id: response.razorpay_payment_id,
-                  razorpay_signature: response.razorpay_signature,
-                  firestoreOrderId: orderData.firestoreOrderId
-                })
-              });
-              const verifyData = await parsePaymentServerResponse(verifyRes, showToast);
-
-              const confirmedOrderId = verifyData.firestoreOrderId || orderData.firestoreOrderId;
-              setCreatedOrderId(confirmedOrderId);
-              placeOrder({
-                id: confirmedOrderId,
-                razorpayOrderId: response.razorpay_order_id,
-                razorpayPaymentId: response.razorpay_payment_id,
-                paymentStatus: 'paid',
-                status: 'paid'
-              });
-              setStep(2);
-              if (showToast) showToast('🎉 Payment verified! Order confirmed.');
-            } catch (vErr) {
-              console.error('[Payment Verification Failure]:', vErr);
-              setError(vErr.message || 'Payment verification failed.');
-            } finally {
-              setIsProcessing(false);
-            }
-          }
-        };
-
-        const rzp = new window.Razorpay(options);
-        rzp.open();
         return;
       } catch (err) {
-        console.error('[Payment Order Flow Error]:', err);
+        console.error('[Shiprocket Order Flow Error]:', err);
         setError(err.message || 'Payment gateway setup incomplete. Please check Admin Vault credentials.');
         setIsProcessing(false);
         return;
@@ -479,7 +402,7 @@ export const CheckoutModal = () => {
       state: stateName,
       pincode: pincode,
       paymentMethod: paymentLabel,
-      razorpayPaymentId: simulatedPaymentId,
+      paymentId: simulatedPaymentId,
       advancePaid: isPartialCod ? 200 : finalPayableTotal,
       codBalance: isPartialCod ? Math.max(0, finalPayableTotal - 200) : 0,
       totalAmount: finalPayableTotal,
@@ -652,7 +575,7 @@ export const CheckoutModal = () => {
             </div>
             <div>
               <h3 className="text-base font-black text-slate-900">
-                {step === 1 ? 'Razorpay & UPI Secure Checkout' : 'Order Placed Successfully!'}
+                {step === 1 ? 'Shiprocket & UPI Secure Checkout' : 'Order Placed Successfully!'}
               </h3>
               <p className="text-[11px] text-slate-500 font-medium">
                 {step === 1 ? 'Mysore Central Dispatch Warehouse Fulfillment' : 'En Route to Mysore Central Hub'}
@@ -887,21 +810,21 @@ export const CheckoutModal = () => {
 
                   <button
                     type="button"
-                    onClick={() => setPaymentMethod('razorpay')}
+                    onClick={() => setPaymentMethod('shiprocket')}
                     className={`p-3 rounded-2xl border text-left transition-all ${
-                      paymentMethod === 'razorpay'
+                      paymentMethod === 'shiprocket'
                         ? 'bg-emerald-50 border-2 border-emerald-600 text-emerald-950 font-bold'
                         : 'bg-white border-slate-200 text-slate-700 hover:border-slate-300'
                     }`}
                   >
                     <div className="flex items-center justify-between mb-1">
                       <CreditCard className="w-5 h-5 text-emerald-700" />
-                      {paymentMethod === 'razorpay' && <span className="w-2 h-2 rounded-full bg-emerald-600" />}
+                      {paymentMethod === 'shiprocket' && <span className="w-2 h-2 rounded-full bg-emerald-600" />}
                     </div>
-                    <div className="text-xs font-black">Cards</div>
-                    <div className="text-[10px] text-slate-500 font-medium">Razorpay</div>
+                    <div className="text-xs font-black">Cards & Netbanking</div>
+                    <div className="text-[10px] text-slate-500 font-medium">Shiprocket</div>
                   </button>
-
+                  
                   <button
                     type="button"
                     onClick={() => setPaymentMethod('cod')}
@@ -953,37 +876,14 @@ export const CheckoutModal = () => {
                   </div>
                 )}
 
-                {paymentMethod === 'razorpay' && (
-                  <div className="bg-slate-50 border border-slate-200 rounded-2xl p-4 space-y-3 text-xs">
-                    <div className="text-xs font-extrabold text-slate-800">
-                      Razorpay Gateway Test Card Simulation:
+                {paymentMethod === 'shiprocket' && (
+                  <div className="bg-slate-50 border border-slate-200 rounded-2xl p-4 space-y-2 text-xs">
+                    <div className="text-xs font-extrabold text-slate-800 flex items-center gap-2">
+                      <span>💳 Shiprocket Instant Gateway:</span>
                     </div>
-                    <div className="space-y-2">
-                      <input
-                        type="text"
-                        value={cardNumber}
-                        onChange={(e) => setCardNumber(e.target.value)}
-                        className="w-full bg-white border border-slate-300 rounded-xl px-3 py-2 text-slate-900 font-mono"
-                        placeholder="Card Number"
-                      />
-                      <div className="grid grid-cols-2 gap-2">
-                        <input
-                          type="text"
-                          value={cardExpiry}
-                          onChange={(e) => setCardExpiry(e.target.value)}
-                          className="w-full bg-white border border-slate-300 rounded-xl px-3 py-2 text-slate-900 font-mono"
-                          placeholder="MM/YY"
-                        />
-                        <input
-                          type="password"
-                          maxLength={3}
-                          value={cardCvv}
-                          onChange={(e) => setCardCvv(e.target.value)}
-                          className="w-full bg-white border border-slate-300 rounded-xl px-3 py-2 text-slate-900 font-mono"
-                          placeholder="CVV"
-                        />
-                      </div>
-                    </div>
+                    <p className="text-[11px] text-slate-600 font-medium">
+                      Supports all Credit/Debit Cards, NetBanking, Mobile Wallets & UPI with 256-bit SSL encryption.
+                    </p>
                   </div>
                 )}
 
@@ -1088,7 +988,7 @@ export const CheckoutModal = () => {
                 </div>
                 <div className="flex justify-between font-semibold pt-1 border-t border-slate-200">
                   <span>Payment Gateway:</span>
-                  <span className="text-emerald-700 font-extrabold">{paymentMethod === 'upi' ? 'UPI' : paymentMethod === 'razorpay' ? 'Razorpay' : 'COD'}</span>
+                  <span className="text-emerald-700 font-extrabold">{paymentMethod === 'upi' ? 'UPI' : paymentMethod === 'shiprocket' ? 'Shiprocket Gateway' : 'COD'}</span>
                 </div>
               </div>
 

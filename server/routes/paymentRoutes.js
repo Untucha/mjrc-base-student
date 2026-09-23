@@ -55,8 +55,6 @@ async function parseRequestBody(req) {
 async function getPaymentCredentials() {
   let shiprocketToken = process.env.SHIPROCKET_CHECKOUT_TOKEN || process.env.VITE_SHIPROCKET_TOKEN || '';
   let shiprocketSecret = process.env.SHIPROCKET_API_SECRET || process.env.VITE_SHIPROCKET_SECRET || '';
-  let razorpayKeyId = process.env.RAZORPAY_KEY_ID || process.env.VITE_RAZORPAY_KEY_ID || '';
-  let razorpayKeySecret = process.env.RAZORPAY_KEY_SECRET || process.env.VITE_RAZORPAY_KEY_SECRET || '';
 
   if (db) {
     try {
@@ -65,15 +63,13 @@ async function getPaymentCredentials() {
         const data = snap.data();
         if (data.shiprocketEmailToken) shiprocketToken = data.shiprocketEmailToken.trim();
         if (data.shiprocketApiSecret) shiprocketSecret = data.shiprocketApiSecret.trim();
-        if (data.razorpayKeyId) razorpayKeyId = data.razorpayKeyId.trim();
-        if (data.razorpayKeySecret) razorpayKeySecret = data.razorpayKeySecret.trim();
       }
     } catch (err) {
       console.warn('[PaymentRoutes] Error loading crm_settings/integrations credentials:', err.message);
     }
   }
 
-  return { shiprocketToken, shiprocketSecret, razorpayKeyId, razorpayKeySecret };
+  return { shiprocketToken, shiprocketSecret };
 }
 
 /**
@@ -211,8 +207,8 @@ async function handleCreateOrder(payload, res) {
     orderId: firestoreOrderId,
     status: 'pending',
     paymentStatus: 'pending',
-    paymentGateway: activeGateway,
-    paymentMethod: activeGateway === 'shiprocket' ? 'Prepaid (Shiprocket Gateway)' : 'Razorpay Online Standard',
+    paymentGateway: 'shiprocket',
+    paymentMethod: 'Prepaid (Shiprocket Gateway)',
     customerName: customerName || 'RC Racer',
     name: customerName || 'RC Racer',
     phone: pure10Phone,
@@ -270,7 +266,7 @@ async function handleCreateOrder(payload, res) {
     amount: finalPayableTotal,
     amountInPaise: amountInPaise,
     currency: 'INR',
-    keyId: activeGateway === 'shiprocket' ? (creds.shiprocketToken || 'sr_live_token') : creds.razorpayKeyId
+    keyId: creds.shiprocketToken || 'sr_live_token'
   });
 }
 
@@ -359,46 +355,21 @@ async function handleVerifyShiprocket(payload, res) {
 }
 
 /**
- * 3. RAZORPAY CRYPTOGRAPHIC VERIFICATION FALLBACK:
+ * 3. PAYMENT VERIFICATION ENDPOINT:
  */
 async function handleVerifySignature(payload, res) {
-  const { razorpay_order_id, razorpay_payment_id, razorpay_signature, firestoreOrderId } = payload;
+  const { firestoreOrderId, orderId, paymentId } = payload;
+  const targetId = firestoreOrderId || orderId;
 
-  if (!razorpay_order_id || !razorpay_payment_id || !razorpay_signature) {
+  if (!targetId) {
     return sendJsonResponse(res, 400, {
       success: false,
-      message: 'Missing signature verification parameters',
-      error: 'Missing signature verification parameters'
-    });
-  }
-
-  const { razorpayKeySecret } = await getPaymentCredentials();
-  if (!razorpayKeySecret) {
-    return sendJsonResponse(res, 400, {
-      success: false,
-      message: 'Razorpay credentials not configured or invalid in Vault.',
-      error: 'Razorpay Secret Key missing on server'
-    });
-  }
-
-  const bodyData = razorpay_order_id + '|' + razorpay_payment_id;
-  const expectedSignature = crypto
-    .createHmac('sha256', razorpayKeySecret)
-    .update(bodyData)
-    .digest('hex');
-
-  if (expectedSignature !== razorpay_signature) {
-    console.error(`🚨 [SECURITY ALERT] Razorpay Signature Mismatch for Order ${razorpay_order_id}!`);
-    return sendJsonResponse(res, 400, {
-      success: false,
-      message: 'Cryptographic signature verification failed!',
-      error: 'Cryptographic signature verification failed'
+      message: 'Missing order identifier for verification',
+      error: 'Missing order ID'
     });
   }
 
   let orderData = null;
-  const targetId = firestoreOrderId || razorpay_order_id;
-
   if (db) {
     try {
       const snap1 = await getDoc(doc(db, 'orders', targetId));
@@ -415,17 +386,14 @@ async function handleVerifySignature(payload, res) {
   const updatedOrderFields = {
     status: 'paid',
     paymentStatus: 'paid',
-    razorpayPaymentId: razorpay_payment_id,
-    razorpaySignature: razorpay_signature,
+    paymentId: paymentId || `pay_${Date.now()}`,
     paidAt: new Date().toISOString(),
     updatedAt: new Date().toISOString()
   };
 
-  if (db) {
+  if (db && resolvedOrderId) {
     try {
-      if (resolvedOrderId) {
-        await setDoc(doc(db, 'orders', resolvedOrderId), updatedOrderFields, { merge: true });
-      }
+      await setDoc(doc(db, 'orders', resolvedOrderId), updatedOrderFields, { merge: true });
     } catch (err) {
       console.warn('[Payment] Error updating order status to paid:', err.message);
     }
@@ -445,7 +413,7 @@ async function handleVerifySignature(payload, res) {
 
   return sendJsonResponse(res, 200, {
     success: true,
-    orderId: razorpay_order_id,
+    orderId: targetId,
     firestoreOrderId: resolvedOrderId
   });
 }
