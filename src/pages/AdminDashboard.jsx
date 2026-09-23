@@ -4312,24 +4312,42 @@ export const AdminDashboard = () => {
                         <p className="text-xs text-slate-500 font-semibold line-clamp-1">{cat.description || 'Hobby-grade RC vehicle category'}</p>
                       </div>
 
-                      <div className="flex items-center gap-2 pt-2 border-t border-slate-100">
+                      <div className="flex items-center gap-1.5 pt-2 border-t border-slate-100">
                         <button
                           type="button"
                           onClick={() => setEditingCategoryModal(cat)}
                           className="flex-1 py-2 bg-slate-100 hover:bg-slate-200 text-slate-800 rounded-xl text-xs font-extrabold flex items-center justify-center gap-1 border border-slate-200 transition cursor-pointer"
                         >
                           <Edit3 size={13} className="text-slate-600" />
-                          <span>Edit Details</span>
+                          <span>Edit</span>
                         </button>
                         <button
                           type="button"
                           onClick={() => saveCategory && saveCategory({ ...cat, isVisible: !isCatVisible })}
-                          className={`py-2 px-3 rounded-xl text-xs font-extrabold border transition cursor-pointer ${
+                          className={`py-2 px-2.5 rounded-xl text-xs font-extrabold border transition cursor-pointer ${
                             isCatVisible ? 'bg-emerald-50 text-emerald-800 border-emerald-200' : 'bg-amber-50 text-amber-800 border-amber-200'
                           }`}
                           title="Toggle Visibility"
                         >
                           {isCatVisible ? <CheckCircle2 size={14} /> : <XCircle size={14} />}
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            const cName = cat.name || cat.label || 'Category';
+                            const cId = cat.id || cat.slug;
+                            if (!cId) return;
+                            const confirmed = window.confirm(
+                              `Delete category '${cName}'? (Existing products will be safely moved to unassigned/retained, not deleted)`
+                            );
+                            if (confirmed && deleteCategory) {
+                              deleteCategory(cId);
+                            }
+                          }}
+                          className="py-2 px-2.5 rounded-xl text-xs font-extrabold bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 transition cursor-pointer flex items-center gap-1"
+                          title={`Delete ${catName}`}
+                        >
+                          <Trash2 size={13} className="text-rose-600" />
                         </button>
                       </div>
                     </div>
@@ -4529,22 +4547,22 @@ export const AdminDashboard = () => {
         {activeTab === 'categories' && (
           <div className="space-y-8">
             {(categoriesList && categoriesList.length > 0
-              ? categoriesList
+              ? categoriesList.filter((c, idx, self) => c && self.findIndex(o => String(o.id || o.slug || o.name).trim() === String(c.id || c.slug || c.name).trim()) === idx)
               : CATEGORY_OPTIONS.map(name => ({ id: name, name, label: name }))
-            ).map((cat) => {
+            ).map((cat, catIdx) => {
               const catName = cat.name || cat.label || cat.id || 'Category';
-              const catId = cat.id || cat.slug || '';
+              const catId = String(cat.id || cat.slug || `cat-key-${catIdx}`).trim();
               const catProducts = displayProducts.filter(p => {
                 const pCat = (p.category || '').toLowerCase().trim();
                 const cName = catName.toLowerCase().trim();
-                const cId = (catId || '').toLowerCase().trim();
+                const cId = catId.toLowerCase();
                 return pCat === cName || (cId && pCat === cId) || (cName && pCat.includes(cName)) || (cName && cName.includes(pCat));
               });
               const isCatVisible = cat.isVisible !== false && !(categoryVisibility && categoryVisibility[catName] === false);
               const categoryBrands = Array.from(new Set(catProducts.map(p => p.brand).filter(Boolean)));
 
               return (
-                <div key={cat.id || cat.slug || catName} className="bg-white border border-slate-200/80 rounded-3xl p-6 shadow-xs space-y-6">
+                <div key={catId} className="bg-white border border-slate-200/80 rounded-3xl p-6 shadow-xs space-y-6">
                   
                   <div className="flex flex-col sm:flex-row sm:items-center justify-between border-b border-slate-100 pb-4 gap-2">
                     <div className="flex items-center gap-3">
@@ -4587,6 +4605,26 @@ export const AdminDashboard = () => {
                       >
                         {isCatVisible ? <CheckCircle2 className="w-4 h-4 text-emerald-600" /> : <XCircle className="w-4 h-4 text-amber-600" />}
                         <span>Category: {isCatVisible ? 'ACTIVE ON STOREFRONT' : 'HIDDEN FROM STOREFRONT'}</span>
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const cName = cat.name || cat.label || 'Category';
+                          const cId = cat.id || cat.slug;
+                          if (!cId) return;
+                          const confirmed = window.confirm(
+                            `Delete category '${cName}'? (Existing products will be safely moved to unassigned/retained, not deleted)`
+                          );
+                          if (confirmed && deleteCategory) {
+                            deleteCategory(cId);
+                          }
+                        }}
+                        className="px-3 py-2 bg-rose-50 hover:bg-rose-100 text-rose-700 rounded-xl text-xs font-extrabold flex items-center gap-1.5 border border-rose-200 transition cursor-pointer"
+                        title={`Delete ${catName}`}
+                      >
+                        <Trash2 size={14} className="text-rose-600" />
+                        <span>Delete</span>
                       </button>
                     </div>
                   </div>

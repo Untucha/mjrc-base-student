@@ -1644,12 +1644,13 @@ export const StoreProvider = ({ children }) => {
 
   const deleteCategory = useCallback(async (catId) => {
     if (!catId) return;
+    const targetId = String(catId).trim();
     setCategoriesList(prev => {
-      const updated = prev.filter(c => c.id !== catId);
+      const updated = (prev || []).filter(c => c && String(c.id || c.slug || '').trim() !== targetId);
       try { localStorage.setItem('mj_categories_list', JSON.stringify(updated)); } catch (e) {}
       return updated;
     });
-    await deleteDoc(doc(db, 'categories', catId)).catch(err => {
+    await deleteDoc(doc(db, 'categories', targetId)).catch(err => {
       console.error('[Firestore] deleteCategory error:', err);
     });
     showToast('Category deleted!');
