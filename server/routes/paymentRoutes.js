@@ -51,30 +51,34 @@ async function parseRequestBody(req) {
   });
 }
 
-// Fetch Razorpay credentials securely from Firestore crm_settings/integrations or process.env
-async function getRazorpayCredentials() {
-  let keyId = process.env.RAZORPAY_KEY_ID || process.env.VITE_RAZORPAY_KEY_ID || '';
-  let keySecret = process.env.RAZORPAY_KEY_SECRET || process.env.VITE_RAZORPAY_KEY_SECRET || '';
+// Fetch payment credentials securely from Firestore crm_settings/integrations or process.env
+async function getPaymentCredentials() {
+  let shiprocketToken = process.env.SHIPROCKET_CHECKOUT_TOKEN || process.env.VITE_SHIPROCKET_TOKEN || '';
+  let shiprocketSecret = process.env.SHIPROCKET_API_SECRET || process.env.VITE_SHIPROCKET_SECRET || '';
+  let razorpayKeyId = process.env.RAZORPAY_KEY_ID || process.env.VITE_RAZORPAY_KEY_ID || '';
+  let razorpayKeySecret = process.env.RAZORPAY_KEY_SECRET || process.env.VITE_RAZORPAY_KEY_SECRET || '';
 
   if (db) {
     try {
       const snap = await getDoc(doc(db, 'crm_settings', 'integrations'));
       if (snap && snap.exists()) {
         const data = snap.data();
-        if (data.razorpayKeyId) keyId = data.razorpayKeyId.trim();
-        if (data.razorpayKeySecret) keySecret = data.razorpayKeySecret.trim();
+        if (data.shiprocketEmailToken) shiprocketToken = data.shiprocketEmailToken.trim();
+        if (data.shiprocketApiSecret) shiprocketSecret = data.shiprocketApiSecret.trim();
+        if (data.razorpayKeyId) razorpayKeyId = data.razorpayKeyId.trim();
+        if (data.razorpayKeySecret) razorpayKeySecret = data.razorpayKeySecret.trim();
       }
     } catch (err) {
       console.warn('[PaymentRoutes] Error loading crm_settings/integrations credentials:', err.message);
     }
   }
 
-  return { keyId, keySecret };
+  return { shiprocketToken, shiprocketSecret, razorpayKeyId, razorpayKeySecret };
 }
 
 /**
  * Central Payment API Router Handler
- * Serves POST /api/payment/create-order and POST /api/payment/verify-signature
+ * Serves POST /api/payment/create-order, /api/payment/verify-shiprocket, /api/payment/verify-signature, /api/payment/cancel-order
  */
 export async function handlePaymentRoutes(req, res) {
   const url = req.url ? req.url.split('?')[0] : '';
@@ -89,8 +93,12 @@ export async function handlePaymentRoutes(req, res) {
   try {
     if (url === '/api/payment/create-order' || url === '/create-order') {
       await handleCreateOrder(payload, res);
+    } else if (url === '/api/payment/verify-shiprocket' || url === '/verify-shiprocket') {
+      await handleVerifyShiprocket(payload, res);
     } else if (url === '/api/payment/verify-signature' || url === '/verify-signature') {
       await handleVerifySignature(payload, res);
+    } else if (url === '/api/payment/cancel-order' || url === '/cancel-order') {
+      await handleCancelOrder(payload, res);
     } else {
       return sendJsonResponse(res, 404, { success: false, message: 'Payment endpoint not found' });
     }
@@ -106,28 +114,18 @@ export async function handlePaymentRoutes(req, res) {
 
 /**
  * 1. SECURE BACKEND ORDER CREATION:
- * Validates prices & per-product coins server-side against Firestore,
- * creates Razorpay Order via REST API, and saves pending draft in Firestore.
+ * Validates prices & per-product coins server-side against Firestore DB,
+ * creates pending draft order in Firestore with paymentStatus: 'pending'.
  */
 async function handleCreateOrder(payload, res) {
-  const { items = [], deliveryAddress = '', useCoins = false, customerPhone = '', customerName = '', shippingDetails = {} } = payload;
+  const { items = [], deliveryAddress = '', useCoins = false, customerPhone = '', customerName = '', customerEmail = '', shippingDetails = {} } = payload;
 
   const pure10Phone = getPure10(customerPhone);
   if (!items || items.length === 0) {
     return sendJsonResponse(res, 400, { success: false, message: 'Cart is empty' });
   }
 
-  // 1. Check active credentials
-  const { keyId, keySecret } = await getRazorpayCredentials();
-  if (!keyId || !keySecret) {
-    return sendJsonResponse(res, 400, {
-      success: false,
-      message: 'Razorpay credentials not configured or invalid in Vault.',
-      error: 'Razorpay credentials not configured or invalid in Vault.'
-    });
-  }
-
-  // 2. Validate each product against Firestore DB
+  // 1. Validate each product against Firestore DB
   let cartSubtotal = 0;
   let totalCartCoinsToBurn = 0;
   let totalCartRupeeDiscount = 0;
@@ -168,11 +166,12 @@ async function handleCreateOrder(payload, res) {
       id: prodId,
       price: unitPrice,
       quantity: qty,
+      selectedColor: item.selectedColor || item.color || null,
       itemTotal: unitPrice * qty
     });
   }
 
-  // 3. Fetch user wallet balance if useCoins is checked
+  // 2. Fetch user wallet balance if useCoins is checked
   let actualCoinsToRedeem = 0;
   let actualRupeeDiscount = 0;
 
@@ -203,84 +202,164 @@ async function handleCreateOrder(payload, res) {
 
   const finalPayableTotal = Math.max(1, cartSubtotal - actualRupeeDiscount);
   const amountInPaise = Math.round(finalPayableTotal * 100);
+  const activeGateway = process.env.PAYMENT_GATEWAY || process.env.VITE_PAYMENT_GATEWAY || 'shiprocket';
 
-  // 4. Call Razorpay API to create order
-  try {
-    const authHeader = `Basic ${Buffer.from(`${keyId}:${keySecret}`).toString('base64')}`;
-    const receiptId = `rc_ord_${Date.now()}`;
+  const firestoreOrderId = `MJ-${Math.floor(80000 + Math.random() * 19000)}`;
 
-    const razorpayRes = await axios.post('https://api.razorpay.com/v1/orders', {
-      amount: amountInPaise,
-      currency: 'INR',
-      receipt: receiptId,
-      notes: {
-        customerPhone: pure10Phone,
-        customerName: customerName || 'RC Racer'
-      }
-    }, {
-      headers: {
-        'Authorization': authHeader,
-        'Content-Type': 'application/json'
-      }
-    });
-
-    const razorpayOrder = razorpayRes.data;
-    const firestoreOrderId = `MJ-${Math.floor(80000 + Math.random() * 19000)}`;
-
-    const pendingOrderDoc = {
-      id: firestoreOrderId,
-      orderId: firestoreOrderId,
-      razorpayOrderId: razorpayOrder.id,
-      status: 'pending_payment',
-      paymentStatus: 'pending_payment',
-      paymentMethod: 'Razorpay Online Standard',
-      customerName: customerName || 'RC Racer',
-      name: customerName || 'RC Racer',
+  const pendingOrderDoc = {
+    id: firestoreOrderId,
+    orderId: firestoreOrderId,
+    status: 'pending',
+    paymentStatus: 'pending',
+    paymentGateway: activeGateway,
+    paymentMethod: activeGateway === 'shiprocket' ? 'Prepaid (Shiprocket Gateway)' : 'Razorpay Online Standard',
+    customerName: customerName || 'RC Racer',
+    name: customerName || 'RC Racer',
+    phone: pure10Phone,
+    mobile: pure10Phone,
+    customerPhone: `+91 ${pure10Phone}`,
+    customerEmail: customerEmail,
+    shippingDetails: shippingDetails || {
+      fullName: customerName,
       phone: pure10Phone,
-      mobile: pure10Phone,
-      customerPhone: `+91 ${pure10Phone}`,
-      shippingDetails: shippingDetails || {},
-      deliveryAddress: deliveryAddress || '',
-      address: deliveryAddress || '',
-      items: validatedItems,
-      subtotal: cartSubtotal,
-      totalAmount: finalPayableTotal,
-      amountInPaise: amountInPaise,
-      coinsRedeemed: actualCoinsToRedeem,
-      coinDiscount: actualRupeeDiscount,
-      createdAt: new Date().toISOString(),
-      created_at: new Date().toISOString()
-    };
+      address: deliveryAddress
+    },
+    shippingAddress: {
+      fullName: customerName,
+      phone: pure10Phone,
+      address: deliveryAddress,
+      flatAddress: shippingDetails.flatAddress || '',
+      streetLandmark: shippingDetails.streetLandmark || '',
+      city: shippingDetails.city || '',
+      state: shippingDetails.state || '',
+      pincode: shippingDetails.pincode || ''
+    },
+    customerDetails: {
+      name: customerName,
+      phone: pure10Phone,
+      email: customerEmail || ''
+    },
+    deliveryAddress: deliveryAddress || '',
+    address: deliveryAddress || '',
+    items: validatedItems,
+    subtotal: cartSubtotal,
+    totalAmount: finalPayableTotal,
+    total: finalPayableTotal,
+    amountInPaise: amountInPaise,
+    coinsRedeemed: actualCoinsToRedeem,
+    coinDiscount: actualRupeeDiscount,
+    createdAt: new Date().toISOString(),
+    created_at: new Date().toISOString()
+  };
 
-    if (db) {
-      try {
-        await setDoc(doc(db, 'orders', firestoreOrderId), pendingOrderDoc);
-        await setDoc(doc(db, 'orders', razorpayOrder.id), pendingOrderDoc);
-      } catch (err) {
-        console.warn('[Payment] Warning saving pending order to Firestore:', err.message);
-      }
+  if (db) {
+    try {
+      await setDoc(doc(db, 'orders', firestoreOrderId), pendingOrderDoc);
+    } catch (err) {
+      console.warn('[Payment] Warning saving pending order to Firestore:', err.message);
     }
-
-    return sendJsonResponse(res, 200, {
-      success: true,
-      orderId: razorpayOrder.id,
-      firestoreOrderId: firestoreOrderId,
-      amount: razorpayOrder.amount,
-      currency: razorpayOrder.currency || 'INR',
-      keyId: keyId
-    });
-  } catch (axiosErr) {
-    console.error('[Razorpay Order Creation API Error]:', axiosErr?.response?.data || axiosErr.message);
-    return sendJsonResponse(res, 400, {
-      success: false,
-      message: 'Razorpay credentials not configured or invalid in Vault.',
-      error: axiosErr?.response?.data?.error?.description || axiosErr.message || 'Failed to reach Razorpay API'
-    });
   }
+
+  const creds = await getPaymentCredentials();
+
+  return sendJsonResponse(res, 200, {
+    success: true,
+    paymentGateway: activeGateway,
+    orderId: firestoreOrderId,
+    firestoreOrderId: firestoreOrderId,
+    amount: finalPayableTotal,
+    amountInPaise: amountInPaise,
+    currency: 'INR',
+    keyId: activeGateway === 'shiprocket' ? (creds.shiprocketToken || 'sr_live_token') : creds.razorpayKeyId
+  });
 }
 
 /**
- * 2. CRYPTOGRAPHIC SIGNATURE VERIFICATION:
+ * 2. SHIPROCKET PAYMENT VERIFICATION:
+ */
+async function handleVerifyShiprocket(payload, res) {
+  const { transaction_id, firestoreOrderId, shippingAddress = {}, customerDetails = {} } = payload;
+  const targetId = firestoreOrderId || payload.orderId;
+
+  if (!targetId) {
+    return sendJsonResponse(res, 400, { success: false, message: 'Missing order ID for Shiprocket payment verification' });
+  }
+
+  let orderData = null;
+  if (db) {
+    try {
+      const snap = await getDoc(doc(db, 'orders', targetId));
+      if (snap && snap.exists()) orderData = snap.data();
+    } catch (err) {
+      console.warn('[Payment] Error fetching order doc:', err.message);
+    }
+  }
+
+  const txnId = transaction_id || payload.payment_id || payload.transactionId || `SR-TXN-${Date.now()}`;
+  const updatedOrderFields = {
+    status: 'paid',
+    paymentStatus: 'paid',
+    paymentGateway: 'shiprocket',
+    transactionId: txnId,
+    paymentMethod: 'Prepaid (Shiprocket Gateway)',
+    shippingAddress: Object.keys(shippingAddress).length > 0 ? shippingAddress : (orderData?.shippingAddress || {}),
+    customerDetails: Object.keys(customerDetails).length > 0 ? customerDetails : (orderData?.customerDetails || {}),
+    paidAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString()
+  };
+
+  if (db && targetId) {
+    try {
+      await setDoc(doc(db, 'orders', targetId), updatedOrderFields, { merge: true });
+    } catch (err) {
+      console.warn('[Payment] Error updating order status to paid:', err.message);
+    }
+  }
+
+  const customerPhone = getPure10(orderData?.phone || orderData?.mobile || customerDetails?.phone);
+  const coinsRedeemed = Number(orderData?.coinsRedeemed || 0);
+
+  if (db && coinsRedeemed > 0 && customerPhone) {
+    try {
+      const userRef = doc(db, 'users', `+91${customerPhone}`);
+      await updateDoc(userRef, {
+        coins: increment(-coinsRedeemed),
+        walletCoins: increment(-coinsRedeemed)
+      });
+      console.log(`🪙 Deducted ${coinsRedeemed} RC Coins from user wallet (+91 ${customerPhone})`);
+    } catch (err) {
+      console.warn('[Payment] Warning deducting coins:', err.message);
+    }
+  }
+
+  // Trigger post-order WhatsApp confirmation dispatch
+  if (customerPhone) {
+    const custName = customerDetails?.name || orderData?.customerName || orderData?.name || 'RC Racer';
+    const itemsSummary = (orderData?.items || []).map(i => `${i.name || i.title} ${i.selectedColor ? '(' + i.selectedColor + ') ' : ''}(x${i.quantity || 1})`).join(', ');
+    const totalPaid = orderData?.totalAmount || orderData?.total || '0';
+    const deliveryAddr = orderData?.deliveryAddress || orderData?.address || 'Mysore Hub';
+    const firstItem = (orderData?.items && orderData.items.length > 0) ? orderData.items[0] : {};
+    const primaryImage = (Array.isArray(firstItem.images) && firstItem.images.length > 0)
+      ? firstItem.images[0]
+      : (firstItem.image || firstItem.imageUrl || null);
+
+    const whatsappMessage = `🏎️ *MJ RC BASE - SHIPROCKET PAYMENT CONFIRMED!*\n\nHi ${custName},\nYour payment of ₹${totalPaid} via Shiprocket Gateway was successfully verified! Order *#${targetId}* is confirmed.\n\n📦 *Items:* ${itemsSummary || 'Hobby RC Machine'}\n💳 *Txn ID:* ${txnId}\n💰 *Total Paid:* ₹${totalPaid}\n📍 *Deliver to:* ${deliveryAddr}\n\nWe will notify you as soon as your package is dispatched!`;
+
+    sendWhatsAppMessage(customerPhone, whatsappMessage, primaryImage, 'normal')
+      .then(r => console.log(`✅ [Shiprocket Post-Payment WhatsApp Dispatched]: ID ${r.messageId}`))
+      .catch(e => console.warn('[Post-Payment WhatsApp Dispatch Warning]:', e.message));
+  }
+
+  return sendJsonResponse(res, 200, {
+    success: true,
+    orderId: targetId,
+    firestoreOrderId: targetId,
+    transactionId: txnId
+  });
+}
+
+/**
+ * 3. RAZORPAY CRYPTOGRAPHIC VERIFICATION FALLBACK:
  */
 async function handleVerifySignature(payload, res) {
   const { razorpay_order_id, razorpay_payment_id, razorpay_signature, firestoreOrderId } = payload;
@@ -293,8 +372,8 @@ async function handleVerifySignature(payload, res) {
     });
   }
 
-  const { keySecret } = await getRazorpayCredentials();
-  if (!keySecret) {
+  const { razorpayKeySecret } = await getPaymentCredentials();
+  if (!razorpayKeySecret) {
     return sendJsonResponse(res, 400, {
       success: false,
       message: 'Razorpay credentials not configured or invalid in Vault.',
@@ -302,45 +381,34 @@ async function handleVerifySignature(payload, res) {
     });
   }
 
-  // Validate HMAC SHA256 signature
   const bodyData = razorpay_order_id + '|' + razorpay_payment_id;
   const expectedSignature = crypto
-    .createHmac('sha256', keySecret)
+    .createHmac('sha256', razorpayKeySecret)
     .update(bodyData)
     .digest('hex');
 
-  const isSignatureValid = expectedSignature === razorpay_signature;
-
-  if (!isSignatureValid) {
+  if (expectedSignature !== razorpay_signature) {
     console.error(`🚨 [SECURITY ALERT] Razorpay Signature Mismatch for Order ${razorpay_order_id}!`);
     return sendJsonResponse(res, 400, {
       success: false,
-      message: 'Cryptographic signature verification failed! Security tampering detected.',
+      message: 'Cryptographic signature verification failed!',
       error: 'Cryptographic signature verification failed'
     });
   }
 
-  console.log(`✅ [RAZORPAY VERIFIED SUCCESS] Order: ${razorpay_order_id} | PaymentID: ${razorpay_payment_id}`);
-
-  // Fetch target order draft from Firestore
   let orderData = null;
   const targetId = firestoreOrderId || razorpay_order_id;
 
   if (db) {
     try {
       const snap1 = await getDoc(doc(db, 'orders', targetId));
-      if (snap1 && snap1.exists()) {
-        orderData = snap1.data();
-      } else {
-        const snap2 = await getDoc(doc(db, 'orders', razorpay_order_id));
-        if (snap2 && snap2.exists()) orderData = snap2.data();
-      }
+      if (snap1 && snap1.exists()) orderData = snap1.data();
     } catch (err) {
       console.warn('[Payment] Error looking up order in Firestore:', err.message);
     }
   }
 
-  const resolvedOrderId = orderData?.id || orderData?.orderId || firestoreOrderId || targetId;
+  const resolvedOrderId = orderData?.id || orderData?.orderId || targetId;
   const customerPhone = getPure10(orderData?.phone || orderData?.mobile || orderData?.customerPhone);
   const coinsRedeemed = Number(orderData?.coinsRedeemed || 0);
 
@@ -358,13 +426,11 @@ async function handleVerifySignature(payload, res) {
       if (resolvedOrderId) {
         await setDoc(doc(db, 'orders', resolvedOrderId), updatedOrderFields, { merge: true });
       }
-      await setDoc(doc(db, 'orders', razorpay_order_id), updatedOrderFields, { merge: true });
     } catch (err) {
       console.warn('[Payment] Error updating order status to paid:', err.message);
     }
   }
 
-  // Deduct coins from user wallet if coins were redeemed
   if (db && coinsRedeemed > 0 && customerPhone) {
     try {
       const userRef = doc(db, 'users', `+91${customerPhone}`);
@@ -372,28 +438,9 @@ async function handleVerifySignature(payload, res) {
         coins: increment(-coinsRedeemed),
         walletCoins: increment(-coinsRedeemed)
       });
-      console.log(`🪙 Deducted ${coinsRedeemed} RC Coins from user wallet (+91 ${customerPhone})`);
     } catch (err) {
-      console.warn('[Payment] Warning deducting redeemed coins from user:', err.message);
+      console.warn('[Payment] Warning deducting coins:', err.message);
     }
-  }
-
-  // Trigger post-order WhatsApp confirmation dispatch strictly AFTER verified payment
-  if (customerPhone) {
-    const customerName = orderData?.customerName || orderData?.name || 'RC Racer';
-    const itemsSummary = (orderData?.items || []).map(i => `${i.name || i.title} (x${i.quantity || i.qty || 1})`).join(', ');
-    const totalPaid = orderData?.totalAmount || '0';
-    const deliveryAddr = orderData?.deliveryAddress || orderData?.address || 'Mysore Hub';
-    const firstItem = (orderData?.items && orderData.items.length > 0) ? orderData.items[0] : {};
-    const primaryImage = (Array.isArray(firstItem.images) && firstItem.images.length > 0)
-      ? firstItem.images[0]
-      : (firstItem.image || firstItem.imageUrl || null);
-
-    const whatsappMessage = `🏎️ *MJ RC BASE - ORDER CONFIRMED!*\n\nHi ${customerName},\nYour payment of ₹${totalPaid} was successfully verified! Order *#${resolvedOrderId}* is confirmed.\n\n📦 *Items:* ${itemsSummary || 'Hobby RC Machine'}\n💰 *Total Paid:* ₹${totalPaid}\n📍 *Deliver to:* ${deliveryAddr}\n\nWe will notify you as soon as your package is dispatched!`;
-
-    sendWhatsAppMessage(customerPhone, whatsappMessage, primaryImage, 'normal')
-      .then(res => console.log(`✅ [Post-Payment WhatsApp Dispatched]: ID ${res.messageId}`))
-      .catch(err => console.warn('[Post-Payment WhatsApp Dispatch Warning]:', err.message));
   }
 
   return sendJsonResponse(res, 200, {
@@ -401,4 +448,24 @@ async function handleVerifySignature(payload, res) {
     orderId: razorpay_order_id,
     firestoreOrderId: resolvedOrderId
   });
+}
+
+/**
+ * 4. CANCEL/DISMISS ORDER ENDPOINT:
+ */
+async function handleCancelOrder(payload, res) {
+  const { firestoreOrderId, reason } = payload;
+  if (db && firestoreOrderId) {
+    try {
+      await updateDoc(doc(db, 'orders', firestoreOrderId), {
+        paymentStatus: 'failed',
+        status: 'failed',
+        cancelReason: reason || 'dismissed_by_user',
+        updatedAt: new Date().toISOString()
+      });
+    } catch (err) {
+      console.warn('[Payment] Notice updating cancelled order:', err.message);
+    }
+  }
+  return sendJsonResponse(res, 200, { success: true, firestoreOrderId });
 }

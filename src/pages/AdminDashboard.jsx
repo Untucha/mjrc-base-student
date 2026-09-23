@@ -5720,14 +5720,23 @@ const OrderFulfillmentDrawer = ({
                               onError={(e) => { e.currentTarget.src = 'https://images.unsplash.com/photo-1594787318286-3d835c1d207f?auto=format&fit=crop&w=800&q=80'; }}
                             />
                             <div className="flex-1 min-w-0">
-                              <div className="font-bold text-slate-900 truncate text-xs">{it.title || it.name}</div>
+                              <div className="font-bold text-slate-900 truncate text-xs flex items-center gap-1.5">
+                                <span className="truncate">{it.title || it.name}</span>
+                                {(it.selectedColor || it.color) && (
+                                  <span className="shrink-0 text-[10px] font-extrabold bg-emerald-100 text-emerald-800 border border-emerald-300 px-1.5 py-0.2 rounded-full">
+                                    🎨 {it.selectedColor || it.color}
+                                  </span>
+                                )}
+                              </div>
                               <div className="text-[11px] text-slate-500 font-medium">Qty: <span className="font-bold text-slate-700">x{it.quantity || 1}</span></div>
                             </div>
                           </div>
                         ))}
                         <div className="pt-2 border-t border-slate-200/80 flex items-center justify-between">
-                          <span className="text-[11px] font-bold text-slate-500">Total Paid:</span>
-                          <span className="font-extrabold text-slate-900 text-base">₹{(Number(ord.total || ord.grandTotal) || 0).toLocaleString('en-IN')}</span>
+                          <span className="text-[10px] font-extrabold text-slate-500 uppercase tracking-wider">
+                            {ord.paymentGateway === 'shiprocket' ? '💳 Shiprocket Gateway' : ord.paymentMethod || 'Prepaid'}
+                          </span>
+                          <span className="font-extrabold text-slate-900 text-base">₹{(Number(ord.total || ord.grandTotal || ord.totalAmount) || 0).toLocaleString('en-IN')}</span>
                         </div>
                       </div>
                     </div>
