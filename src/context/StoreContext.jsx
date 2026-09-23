@@ -970,54 +970,47 @@ export const StoreProvider = ({ children }) => {
     }
   });
 
-  // Listen to Firestore 'categories' collection in real-time & ensure all 6 core categories exist
+  // Listen to Firestore 'categories' collection in real-time
   useEffect(() => {
     const catCol = collection(db, 'categories');
     const unsubscribe = onSnapshot(catCol, (snapshot) => {
+      if (snapshot.empty) {
+        const hasSeeded = localStorage.getItem('mj_categories_initial_seeded');
+        if (!hasSeeded) {
+          localStorage.setItem('mj_categories_initial_seeded', 'true');
+          console.log('[Firestore] Seeding initial default categories to Firestore...');
+          const batch = writeBatch(db);
+          DEFAULT_CATEGORIES.forEach(catObj => {
+            const ref = doc(db, 'categories', catObj.id);
+            batch.set(ref, catObj, { merge: true });
+          });
+          batch.commit().catch(err => console.warn('[Firestore] Error seeding initial categories:', err));
+        } else {
+          setCategoriesList([]);
+          try { localStorage.setItem('mj_categories_list', JSON.stringify([])); } catch (e) {}
+        }
+        return;
+      }
+
+      localStorage.setItem('mj_categories_initial_seeded', 'true');
+
       const liveDocs = snapshot.docs.map(docSnap => ({ id: docSnap.id, ...docSnap.data() }));
       
-      const mergedMap = new Map();
-      // 1. Seed with default 6 core categories
-      DEFAULT_CATEGORIES.forEach(defCat => {
-        mergedMap.set(defCat.id, { ...defCat });
-        if (defCat.slug) mergedMap.set(defCat.slug, { ...defCat });
-      });
-
-      // 2. Overlay live Firestore category documents
+      // Deduplicate liveDocs by normalized category name / slug
+      const uniqueMap = new Map();
       liveDocs.forEach(cDoc => {
-        const key = cDoc.id || cDoc.slug || (cDoc.name ? cDoc.name.toLowerCase().trim().replace(/[^a-z0-9]/g, '-') : '');
-        if (key) {
-          const existing = mergedMap.get(key) || {};
-          mergedMap.set(key, { ...existing, ...cDoc });
-          if (cDoc.id) mergedMap.set(cDoc.id, { ...existing, ...cDoc });
+        const cName = cDoc.name || cDoc.label || cDoc.slug || cDoc.id || '';
+        const normKey = cName.toLowerCase().trim().replace(/[^a-z0-9]/g, '-');
+        if (normKey && !uniqueMap.has(normKey)) {
+          uniqueMap.set(normKey, cDoc);
         }
       });
 
-      // Deduplicate by category ID/slug
-      const uniqueCatsMap = new Map();
-      Array.from(mergedMap.values()).forEach(cat => {
-        const catId = cat.id || cat.slug || cat.name;
-        if (!uniqueCatsMap.has(catId)) {
-          uniqueCatsMap.set(catId, cat);
-        }
-      });
+      const uniqueCats = Array.from(uniqueMap.values());
+      uniqueCats.sort((a, b) => (a.sortOrder || 0) - (b.sortOrder || 0));
 
-      const mergedCats = Array.from(uniqueCatsMap.values());
-      mergedCats.sort((a, b) => (a.sortOrder || 0) - (b.sortOrder || 0));
-      setCategoriesList(mergedCats);
-      try { localStorage.setItem('mj_categories_list', JSON.stringify(mergedCats)); } catch (e) {}
-
-      // Auto-sync missing core categories to Firestore if not present in snapshot
-      const existingIds = new Set(snapshot.docs.map(d => d.id));
-      const missingCore = DEFAULT_CATEGORIES.filter(c => !existingIds.has(c.id));
-      if (missingCore.length > 0) {
-        const batch = writeBatch(db);
-        missingCore.forEach(mCat => {
-          const ref = doc(db, 'categories', mCat.id);
-          batch.set(ref, mCat, { merge: true });
-        });
-        batch.commit().catch(err => console.warn('[Firestore] Error syncing missing core categories:', err));
-      }
+      setCategoriesList(uniqueCats);
+      try { localStorage.setItem('mj_categories_list', JSON.stringify(uniqueCats)); } catch (e) {}
     }, (err) => {
       console.warn('[Firestore] categories listener notice:', err);
     });
@@ -1078,18 +1071,45 @@ export const StoreProvider = ({ children }) => {
     showToast(`Category "${payload.name}" saved & synced!`);
   }, [showToast]);
 
-  const deleteCategory = useCallback(async (catId) => {
-    if (!catId) return;
-    const targetId = String(catId).trim();
+  const deleteCategory = useCallback(async (catIdOrName) => {
+    if (!catIdOrName) return;
+    const targetStr = String(catIdOrName).trim();
+    const targetSlug = targetStr.toLowerCase().replace(/[^a-z0-9]/g, '-');
+
     setCategoriesList(prev => {
-      const updated = (prev || []).filter(c => c && String(c.id || c.slug || '').trim() !== targetId);
+      const updated = (prev || []).filter(c => {
+        if (!c) return false;
+        const cId = String(c.id || '').trim();
+        const cSlug = String(c.slug || '').trim();
+        const cName = String(c.name || c.label || '').trim().toLowerCase().replace(/[^a-z0-9]/g, '-');
+        return cId !== targetStr && cSlug !== targetStr && cName !== targetSlug && cId.toLowerCase().replace(/[^a-z0-9]/g, '-') !== targetSlug;
+      });
       try { localStorage.setItem('mj_categories_list', JSON.stringify(updated)); } catch (e) {}
       return updated;
     });
-    await deleteDoc(doc(db, 'categories', targetId)).catch(err => {
+
+    try {
+      await deleteDoc(doc(db, 'categories', targetStr));
+      if (targetSlug !== targetStr) {
+        await deleteDoc(doc(db, 'categories', targetSlug)).catch(() => {});
+      }
+      // Purge legacy doc ID aliases if applicable
+      const LEGACY_ALIASES = {
+        'rc-crawlers': 'cat-crawler',
+        'trail-pickups': 'cat-trail-pickups',
+        'drift-and-rally': 'cat-drift-rally',
+        'bashers-and-monster': 'cat-bashers-monster',
+        'heavy-machinery': 'cat-heavy-machinery',
+        'short-course': 'cat-short-course'
+      };
+      if (LEGACY_ALIASES[targetSlug]) {
+        await deleteDoc(doc(db, 'categories', LEGACY_ALIASES[targetSlug])).catch(() => {});
+      }
+      showToast('Category permanently deleted!');
+    } catch (err) {
       console.error('[Firestore] deleteCategory error:', err);
-    });
-    showToast('Category deleted!');
+      showToast('Failed to delete category from database');
+    }
   }, [showToast]);
 
   const [latestRcCars, setLatestRcCars] = useState(() => {

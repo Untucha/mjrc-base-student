@@ -4292,7 +4292,11 @@ export const AdminDashboard = () => {
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-              {(categoriesList || []).map((cat) => {
+              {((categoriesList || []).filter((c, idx, self) => {
+                if (!c) return false;
+                const normKey = (c.name || c.label || c.slug || c.id || '').toLowerCase().trim().replace(/[^a-z0-9]/g, '-');
+                return self.findIndex(o => o && (o.name || o.label || o.slug || o.id || '').toLowerCase().trim().replace(/[^a-z0-9]/g, '-') === normKey) === idx;
+              })).map((cat) => {
                 const catName = cat.name || cat.label || 'Category';
                 const catImg = cat.imageUrl || cat.image || 'https://images.unsplash.com/photo-1594787318286-3d835c1d207f?auto=format&fit=crop&w=300&q=80';
                 const isCatVisible = cat.isVisible !== false;
@@ -4359,21 +4363,22 @@ export const AdminDashboard = () => {
                         </button>
                         <button
                           type="button"
-                          onClick={() => {
+                          onClick={async () => {
                             const cName = cat.name || cat.label || 'Category';
-                            const cId = cat.id || cat.slug;
+                            const cId = cat.id || cat.slug || cName;
                             if (!cId) return;
                             const confirmed = window.confirm(
                               `Delete category '${cName}'? (Existing products will be safely moved to unassigned/retained, not deleted)`
                             );
                             if (confirmed && deleteCategory) {
-                              deleteCategory(cId);
+                              await deleteCategory(cId);
                             }
                           }}
-                          className="py-2 px-2.5 rounded-xl text-xs font-extrabold bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 transition cursor-pointer flex items-center gap-1"
+                          className="py-2 px-2.5 rounded-xl text-xs font-extrabold bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 transition cursor-pointer flex items-center gap-1 active:scale-95"
                           title={`Delete ${catName}`}
                         >
                           <Trash2 size={13} className="text-rose-600" />
+                          <span className="hidden sm:inline">Delete</span>
                         </button>
                       </div>
                     </div>
