@@ -116,16 +116,14 @@ export const AdminConsole = () => {
     customMessage: '🔥 FESTIVE DEAL ALERT! Save 15% OFF on ARRMA Kraton 6S + 500 RC Coins in your wallet! Shop now at MJ RC BASE: https://mjrc.in'
   });
 
-  // 8 Clean Store Categories
+  // 6 Official Store Categories
   const ADMIN_CATEGORIES = [
     { id: 'cat-crawler', name: 'RC Crawlers', label: 'RC Crawlers', icon: '🧗' },
-    { id: 'cat-mini', name: 'Mini RC Cars', label: 'Mini RC Cars', icon: '🎮' },
-    { id: 'cat-drift', name: 'Drift RC', label: 'Drift RC', icon: '🏎️' },
-    { id: 'cat-boat', name: 'RC Boats', label: 'RC Boats', icon: '⛵' },
-    { id: 'cat-monster', name: 'Monster Trucks', label: 'Monster Trucks', icon: '🛻' },
-    { id: 'cat-diecast', name: 'Diecast Scale Cars', label: 'Diecast Scale Cars', icon: '📐' },
-    { id: 'cat-speed-boats', name: 'RC Speed Boats', label: 'RC Speed Boats', icon: '🚤' },
-    { id: 'cat-construction', name: 'RC Heavy Machinery', label: 'RC Heavy Machinery', icon: '🚜' }
+    { id: 'cat-trail-pickups', name: 'Trail Pickups', label: 'Trail Pickups', icon: '🛻' },
+    { id: 'cat-drift-rally', name: 'Drift and Rally', label: 'Drift and Rally', icon: '🏎️' },
+    { id: 'cat-bashers-monster', name: 'Bashers and Monster', label: 'Bashers and Monster', icon: '⚡' },
+    { id: 'cat-heavy-machinery', name: 'Heavy Machinery', label: 'Heavy Machinery', icon: '🚜' },
+    { id: 'cat-short-course', name: 'Short course', label: 'Short course', icon: '🏁' }
   ];
 
   // Accordion state for Category Manager
@@ -972,12 +970,9 @@ export const AdminConsole = () => {
                       p.category === cat.name ||
                       p.category?.toLowerCase() === cat.name.toLowerCase() ||
                       (cat.name === 'RC Crawlers' && (p.category === 'Rock Crawler' || p.category === 'RC Crawler')) ||
-                      (cat.name === 'Mini RC Cars' && p.category === 'Mini RC') ||
-                      (cat.name === 'Drift RC' && (p.category === 'Drift' || p.category === 'Drift 4WD')) ||
-                      (cat.name === 'RC Boats' && p.category === 'Boat') ||
-                      (cat.name === 'Monster Trucks' && p.category === 'Monster Truck') ||
-                      (cat.name === 'Diecast Scale Cars' && (p.category === 'Diecast Models' || p.category?.includes('Scale'))) ||
-                      (cat.name === 'RC Heavy Machinery' && p.category === 'Construction')
+                      (cat.name === 'Drift and Rally' && (p.category === 'Drift' || p.category === 'Drift 4WD' || p.category === 'Rally')) ||
+                      (cat.name === 'Bashers and Monster' && (p.category === 'Basher' || p.category === 'Monster Truck')) ||
+                      (cat.name === 'Heavy Machinery' && (p.category === 'Construction' || p.category === 'RC Heavy Machinery'))
                     );
                     const filteredCatProds = searchFilteredProducts(categoryProds);
                     const isOpen = openCategoryAccordion === cat.id;

@@ -916,17 +916,35 @@ export const StoreProvider = ({ children }) => {
     showToast(`Brand "${payload.name}" saved & synced!`);
   }, [showToast]);
 
-  const deleteBrand = useCallback(async (brandId) => {
-    if (!brandId) return;
+  const deleteBrand = useCallback(async (brandIdOrName) => {
+    if (!brandIdOrName) return;
+    const targetStr = String(brandIdOrName).trim();
+    const targetLower = targetStr.toLowerCase();
+
     setBrandsList(prev => {
-      const updated = prev.filter(b => b.id !== brandId);
+      const source = (prev && prev.length > 0) ? prev : DEFAULT_OFFICIAL_BRANDS;
+      const updated = source.filter(b => {
+        if (!b) return false;
+        const bId = String(typeof b === 'object' ? (b.id || b.name || '') : b).trim().toLowerCase();
+        const bName = String(typeof b === 'object' ? (b.name || b.id || '') : b).trim().toLowerCase();
+        return bId !== targetLower && bName !== targetLower;
+      });
       try { localStorage.setItem('mj_brands_list', JSON.stringify(updated)); } catch (e) {}
       return updated;
     });
-    await deleteDoc(doc(db, 'brands', brandId)).catch(err => {
+
+    setBrandVisibility(prev => {
+      const copy = { ...prev };
+      delete copy[targetStr];
+      delete copy[targetStr.toUpperCase()];
+      delete copy[targetStr.toLowerCase()];
+      return copy;
+    });
+
+    await deleteDoc(doc(db, 'brands', targetStr)).catch(err => {
       console.error('[Firestore] deleteBrand error:', err);
     });
-    showToast('Brand deleted!');
+    showToast(`Brand "${targetStr}" permanently deleted!`);
   }, [showToast]);
 
   const [categoriesList, setCategoriesList] = useState(() => {

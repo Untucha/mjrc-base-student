@@ -3,48 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useStore } from '../context/StoreContext';
 import { ShoppingCart } from 'lucide-react';
 
-const DIECAST_MODELS = [
-  {
-    id: 'rc-025',
-    title: 'Hot Wheels Silver Series 2019 Ford Mustang GT',
-    scale: '1:64 Diecast',
-    price: 599,
-    mrp: 700,
-    discount: '-14%',
-    badge: 'COLLECTIBLE',
-    image: 'https://images.unsplash.com/photo-1617814076367-b759c7d7e738?auto=format&fit=crop&w=400&q=80'
-  },
-  {
-    id: 'rc-026',
-    title: 'Hot Wheels 2005 Aston Martin DB9 Fast & Furious',
-    scale: '1:64 Diecast',
-    price: 799,
-    mrp: 899,
-    discount: '-11%',
-    badge: 'LIMITED EDITION',
-    image: 'https://images.unsplash.com/photo-1552519507-da3b142c6e3d?auto=format&fit=crop&w=400&q=80'
-  },
-  {
-    id: 'rc-027',
-    title: 'Bburago 1:64 Racing Edition Spec Tuner',
-    scale: '1:64 Diecast',
-    price: 599,
-    mrp: 699,
-    discount: '-14%',
-    badge: 'HOT SELLER',
-    image: 'https://images.unsplash.com/photo-1583121274602-3e2820c69888?auto=format&fit=crop&w=400&q=80'
-  },
-  {
-    id: 'rc-028',
-    title: 'MINI GT 1:64 Nissan GT-R Nismo GT3',
-    scale: '1:64 Diecast',
-    price: 1299,
-    mrp: 1499,
-    discount: '-13%',
-    badge: 'PRO DIECAST',
-    image: 'https://images.unsplash.com/photo-1503376780353-7e6692767b70?auto=format&fit=crop&w=400&q=80'
-  }
-];
+const DIECAST_MODELS = [];
 
 export const DiecastShowcase = () => {
   return null;

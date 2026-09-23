@@ -4228,6 +4228,20 @@ export const AdminDashboard = () => {
                         <Plus size={12} />
                         <span>+ Add {brandName} Product</span>
                       </button>
+
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const targetId = typeof brandObj === 'object' ? (brandObj.id || brandName) : brandName;
+                          if (window.confirm(`Are you sure you want to permanently delete brand '${brandName}' from the database? This cannot be undone.`)) {
+                            if (deleteBrand) deleteBrand(targetId);
+                          }
+                        }}
+                        className="px-3 py-1.5 bg-red-50 hover:bg-red-100 text-red-700 rounded-xl text-xs font-black flex items-center gap-1 border border-red-200 transition cursor-pointer active:scale-95"
+                      >
+                        <Trash2 size={12} className="text-red-600" />
+                        <span>Delete Brand</span>
+                      </button>
                     </div>
                   </div>
 
