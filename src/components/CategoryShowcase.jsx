@@ -79,7 +79,6 @@ export const CategoryShowcase = () => {
         to={`/category/${slug}`}
         state={{ returnSection: 'shop-by-category' }}
         onClick={() => {
-          if (setSelectedCategory && catName) setSelectedCategory(catName);
           if (typeof window !== 'undefined') {
             sessionStorage.setItem('returnSection', 'shop-by-category');
           }

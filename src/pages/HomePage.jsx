@@ -1,5 +1,6 @@
 import React, { useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
+import { useStore } from '../context/StoreContext';
 import { HeroBanner } from '../components/HeroBanner';
 import { CategoryShowcase } from '../components/CategoryShowcase';
 import { BrandGrid } from '../components/BrandGrid';
@@ -11,6 +12,13 @@ import { ReviewShowcase } from '../components/ReviewShowcase';
 
 export const HomePage = () => {
   const location = useLocation();
+  const { setSelectedCategory } = useStore();
+
+  useEffect(() => {
+    if (setSelectedCategory) {
+      setSelectedCategory('ALL');
+    }
+  }, [setSelectedCategory]);
 
   useEffect(() => {
     const returnSection = location.state?.returnSection ||
