@@ -41,6 +41,7 @@ import {
   Coins,
   Box,
   Settings,
+  Megaphone,
   Sparkles,
   RefreshCw,
   Sliders,
@@ -70,7 +71,9 @@ import {
   FileText,
   SlidersHorizontal,
   ChevronRight,
-  Edit3
+  Edit3,
+  Save,
+  Loader2
 } from 'lucide-react';
 
 const CATEGORY_OPTIONS = [
@@ -1984,6 +1987,8 @@ export const AdminDashboard = () => {
     sendCloudWhatsAppMessage,
     welcomeConfig,
     updateWelcomeConfig,
+    marqueeTicker,
+    updateMarqueeTicker,
     triggerCampaignBroadcast,
     reviewsList,
     addReview,
@@ -2013,6 +2018,65 @@ export const AdminDashboard = () => {
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [addModalPreset, setAddModalPreset] = useState(null);
   const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
+
+  // Marquee Ticker State
+  const DEFAULT_TICKER_DEFAULTS = useMemo(() => [
+    "100% BENCH-TESTED BEFORE PACKING",
+    "24H MYSORE AIR CARGO DISPATCH",
+    "LIFETIME GENUINE RC SPARES SUPPORT",
+    "256-BIT ENCRYPTED INSTANT CHECKOUT"
+  ], []);
+
+  const [tickerList, setTickerList] = useState(DEFAULT_TICKER_DEFAULTS);
+  const [tickerActive, setTickerActive] = useState(true);
+  const [isSavingTicker, setIsSavingTicker] = useState(false);
+
+  useEffect(() => {
+    if (marqueeTicker) {
+      if (Array.isArray(marqueeTicker.items) && marqueeTicker.items.length > 0) {
+        setTickerList(marqueeTicker.items);
+      }
+      setTickerActive(marqueeTicker.isActive !== false);
+    }
+  }, [marqueeTicker]);
+
+  const handleTickerItemChange = (idx, val) => {
+    setTickerList(prev => {
+      const copy = [...prev];
+      copy[idx] = val;
+      return copy;
+    });
+  };
+
+  const handleAddTickerItem = () => {
+    setTickerList(prev => [...prev, 'NEW PROMOTIONAL NOTICE']);
+  };
+
+  const handleRemoveTickerItem = (idx) => {
+    if (tickerList.length <= 1) {
+      if (showToast) showToast('At least one ticker notice phrase is required.');
+      return;
+    }
+    setTickerList(prev => prev.filter((_, i) => i !== idx));
+  };
+
+  const handleResetDefaultTicker = () => {
+    setTickerList(DEFAULT_TICKER_DEFAULTS);
+    setTickerActive(true);
+    if (showToast) showToast('Reset to default promotional phrases.');
+  };
+
+  const handleSaveTickerSettings = async (e) => {
+    if (e) e.preventDefault();
+    setIsSavingTicker(true);
+    if (updateMarqueeTicker) {
+      await updateMarqueeTicker({
+        items: tickerList,
+        isActive: tickerActive
+      });
+    }
+    setIsSavingTicker(false);
+  };
 
   // New Dedicated Hub States
   const [showFullCatalog, setShowFullCatalog] = useState(false);
@@ -2938,7 +3002,8 @@ export const AdminDashboard = () => {
     { id: 'brands', label: '🏷️ Shop By Brand', icon: Tag },
     { id: 'reviews', label: '⭐ Customer Reviews & Media', icon: Star, badge: `${reviewsList?.length || 0}` },
     { id: 'categories', label: '📂 Shop By Category', icon: Layers },
-    { id: 'settings', label: '⚙️ Global Settings & Loyalty', icon: Settings }
+    { id: 'settings', label: '⚙️ Global Settings & Loyalty', icon: Settings },
+    { id: 'ticker', label: '📢 Store Announcements / Ticker', icon: Megaphone }
   ];
 
   return (
@@ -3078,6 +3143,7 @@ export const AdminDashboard = () => {
               {activeTab === 'reviews' && <span>⭐ Customer Reviews & Storefront Media Controls</span>}
               {activeTab === 'categories' && <span>📂 Shop By Category</span>}
               {activeTab === 'settings' && <span>⚙️ Global Settings & Loyalty Rules</span>}
+              {activeTab === 'ticker' && <span>📢 Storefront Marquee Ticker Management</span>}
             </h1>
             <p className="text-xs text-slate-500 font-semibold mt-0.5">
               {activeTab === 'analytics' && '100% Real Firestore sales revenue, completed/pending orders, active users & coin balances'}
@@ -3089,6 +3155,7 @@ export const AdminDashboard = () => {
               {activeTab === 'reviews' && 'Audit buyer feedback, star ratings, verified buyer tags & customer photo/video upload switches'}
               {activeTab === 'categories' && 'Nested category management with inline Brand controls'}
               {activeTab === 'settings' && 'Configure Coin loyalty rates, WhatsApp Cloud API gateway & store options'}
+              {activeTab === 'ticker' && 'Customize the moving promotional phrases and highlight notices shown across the storefront banner'}
             </p>
           </div>
 
@@ -5013,6 +5080,132 @@ export const AdminDashboard = () => {
               )}
             </div>
 
+          </div>
+        </div>
+      )}
+
+      {/* HUB 7: STOREFRONT MARQUEE TICKER MANAGEMENT */}
+      {activeTab === 'ticker' && (
+        <div className="space-y-6">
+          <div className="bg-white border border-slate-200/80 rounded-3xl p-6 shadow-xs space-y-6">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-slate-100">
+              <div>
+                <h3 className="font-black text-lg text-slate-900 flex items-center gap-2">
+                  <Megaphone className="w-5 h-5 text-red-600" /> Marquee Banner Notice Strip
+                </h3>
+                <p className="text-xs text-slate-500 font-semibold mt-0.5">
+                  Customize the moving promotional phrases and highlight notices shown across the storefront banner
+                </p>
+              </div>
+
+              <div className="flex items-center gap-3">
+                <span className={`text-xs font-bold px-3 py-1 rounded-full flex items-center gap-1.5 ${
+                  tickerActive ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' : 'bg-rose-50 text-rose-700 border border-rose-200'
+                }`}>
+                  <span className={`w-2 h-2 rounded-full ${tickerActive ? 'bg-emerald-500 animate-pulse' : 'bg-rose-500'}`} />
+                  {tickerActive ? 'Ticker Active (Visible)' : 'Ticker Hidden'}
+                </span>
+                <label className="relative inline-flex items-center cursor-pointer">
+                  <input
+                    type="checkbox"
+                    className="sr-only peer"
+                    checked={tickerActive}
+                    onChange={(e) => setTickerActive(e.target.checked)}
+                  />
+                  <div className="w-11 h-6 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-red-600"></div>
+                </label>
+              </div>
+            </div>
+
+            {/* Ticker Items List */}
+            <div className="space-y-4">
+              <div className="flex items-center justify-between">
+                <h4 className="text-xs font-black text-slate-700 uppercase tracking-wider">
+                  Banner Announcement Strings ({tickerList.length})
+                </h4>
+                <button
+                  type="button"
+                  onClick={handleResetDefaultTicker}
+                  className="text-xs text-slate-500 hover:text-slate-800 font-bold underline"
+                >
+                  Reset Defaults
+                </button>
+              </div>
+
+              <div className="space-y-3">
+                {tickerList.map((item, idx) => (
+                  <div key={idx} className="flex items-center gap-2">
+                    <span className="w-6 text-xs font-black text-slate-400 text-center">{idx + 1}.</span>
+                    <input
+                      type="text"
+                      value={item}
+                      onChange={(e) => handleTickerItemChange(idx, e.target.value)}
+                      placeholder={`Notice phrase #${idx + 1}`}
+                      className="flex-1 px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold text-slate-800 focus:outline-none focus:ring-2 focus:ring-red-500/20 focus:border-red-500"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => handleRemoveTickerItem(idx)}
+                      disabled={tickerList.length <= 1}
+                      className="p-2.5 text-slate-400 hover:text-rose-600 hover:bg-rose-50 border border-transparent hover:border-rose-200 rounded-xl transition-colors disabled:opacity-30 disabled:hover:bg-transparent disabled:hover:text-slate-400"
+                      title="Delete phrase"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </button>
+                  </div>
+                ))}
+              </div>
+
+              <button
+                type="button"
+                onClick={handleAddTickerItem}
+                className="w-full py-3 border-2 border-dashed border-slate-200 rounded-2xl text-xs font-bold text-slate-600 hover:bg-slate-50 hover:border-slate-300 transition-colors flex items-center justify-center gap-2"
+              >
+                <Plus className="w-4 h-4 text-red-600" />
+                + Add New Ticker Notice
+              </button>
+            </div>
+
+            {/* Live Preview Box */}
+            <div className="pt-4 border-t border-slate-100 space-y-2">
+              <span className="text-[10px] font-black text-slate-400 uppercase tracking-wider">Storefront Live Marquee Preview</span>
+              <div className="bg-slate-900 text-white rounded-xl p-3 border border-slate-800 overflow-hidden">
+                <div className="flex items-center gap-4 text-xs font-bold tracking-wide animate-pulse">
+                  {tickerActive ? (
+                    tickerList.map((str, i) => (
+                      <span key={i} className="flex items-center gap-2 whitespace-nowrap text-amber-400">
+                        <span>⚡</span>
+                        <span className="text-white">{str}</span>
+                      </span>
+                    ))
+                  ) : (
+                    <span className="text-slate-500 italic">Ticker strip disabled (hidden on homepage)</span>
+                  )}
+                </div>
+              </div>
+            </div>
+
+            {/* Action Buttons */}
+            <div className="pt-4 border-t border-slate-100 flex items-center justify-end">
+              <button
+                type="button"
+                onClick={handleSaveTickerSettings}
+                disabled={isSavingTicker}
+                className="px-6 py-3 bg-red-600 hover:bg-red-700 text-white rounded-xl font-bold text-xs shadow-md shadow-red-600/20 flex items-center gap-2 transition-all disabled:opacity-50"
+              >
+                {isSavingTicker ? (
+                  <>
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                    Saving Ticker...
+                  </>
+                ) : (
+                  <>
+                    <Save className="w-4 h-4" />
+                    Save Ticker Settings
+                  </>
+                )}
+              </button>
+            </div>
           </div>
         </div>
       )}

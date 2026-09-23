@@ -145,6 +145,18 @@ export const DEFAULT_OFFICIAL_BRANDS = [
   { id: 'kyosho', name: 'KYOSHO', logoUrl: 'https://upload.wikimedia.org/wikipedia/commons/8/84/Kyosho_logo.svg', isVisible: true, brandGroup: 'speed_scale', isCrawlerBrand: false, sortOrder: 18 }
 ];
 
+export const DEFAULT_TICKER_ITEMS = [
+  "100% BENCH-TESTED BEFORE PACKING",
+  "24H MYSORE AIR CARGO DISPATCH",
+  "LIFETIME GENUINE RC SPARES SUPPORT",
+  "256-BIT ENCRYPTED INSTANT CHECKOUT"
+];
+
+export const DEFAULT_TICKER_CONFIG = {
+  items: DEFAULT_TICKER_ITEMS,
+  isActive: true
+};
+
 
 const getSafeStorage = (key, fallback, validateFn) => {
   if (typeof window === 'undefined') return fallback;
@@ -883,6 +895,52 @@ export const StoreProvider = ({ children }) => {
     });
     showToast('Brand sub-tab titles updated & synced!');
   }, [brandTabTitles, showToast]);
+
+  const [marqueeTicker, setMarqueeTicker] = useState(() => {
+    try {
+      const saved = localStorage.getItem('mj_marquee_ticker');
+      return saved ? JSON.parse(saved) : DEFAULT_TICKER_CONFIG;
+    } catch {
+      return DEFAULT_TICKER_CONFIG;
+    }
+  });
+
+  // Sync marqueeTicker with Firestore 'settings/marquee_ticker'
+  useEffect(() => {
+    const docRef = doc(db, 'settings', 'marquee_ticker');
+    const unsubscribe = onSnapshot(docRef, (docSnap) => {
+      if (docSnap.exists()) {
+        const data = docSnap.data();
+        const updated = {
+          items: Array.isArray(data.items) && data.items.length > 0 ? data.items : DEFAULT_TICKER_ITEMS,
+          isActive: data.isActive !== false
+        };
+        setMarqueeTicker(updated);
+        try { localStorage.setItem('mj_marquee_ticker', JSON.stringify(updated)); } catch (e) {}
+      }
+    }, (err) => console.warn('[Firestore] marquee_ticker listener notice:', err));
+    return () => unsubscribe();
+  }, []);
+
+  const updateMarqueeTicker = useCallback(async (newConfig) => {
+    const items = Array.isArray(newConfig.items)
+      ? newConfig.items.map(s => String(s).trim()).filter(Boolean)
+      : DEFAULT_TICKER_ITEMS;
+
+    const updated = {
+      items: items.length > 0 ? items : DEFAULT_TICKER_ITEMS,
+      isActive: newConfig.isActive !== false,
+      updatedAt: new Date().toISOString()
+    };
+
+    setMarqueeTicker(updated);
+    try { localStorage.setItem('mj_marquee_ticker', JSON.stringify(updated)); } catch (e) {}
+
+    await setDoc(doc(db, 'settings', 'marquee_ticker'), updated, { merge: true }).catch(err => {
+      console.error('[Firestore] updateMarqueeTicker error:', err);
+    });
+    showToast('📢 Storefront Marquee Ticker saved & synced to Firestore!');
+  }, [showToast]);
 
   const saveBrand = useCallback(async (brandData) => {
     if (!brandData || !brandData.name) return;
@@ -3080,6 +3138,8 @@ export const StoreProvider = ({ children }) => {
     toggleProductStock,
     welcomeConfig,
     updateWelcomeConfig,
+    marqueeTicker,
+    updateMarqueeTicker,
     welcomeBonusCoins,
     updateWelcomeBonusCoins,
     currentUser: user,

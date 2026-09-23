@@ -1,13 +1,17 @@
-import React from 'react';
-import { ShieldCheck, Video, Rocket, Wrench, CheckCircle2 } from 'lucide-react';
+import { useStore, DEFAULT_TICKER_ITEMS } from '../context/StoreContext';
 
 export const RunningTicker = ({ className = '' }) => {
-  const tickerItems = [
-    "100% BENCH-TESTED BEFORE PACKING",
-    "24H MYSORE AIR CARGO DISPATCH",
-    "LIFETIME GENUINE RC SPARES SUPPORT",
-    "256-BIT ENCRYPTED INSTANT CHECKOUT"
-  ];
+  const { marqueeTicker } = useStore();
+
+  const isTickerActive = marqueeTicker ? marqueeTicker.isActive !== false : true;
+  const rawItems = marqueeTicker?.items && marqueeTicker.items.length > 0
+    ? marqueeTicker.items
+    : DEFAULT_TICKER_ITEMS;
+
+  if (!isTickerActive) return null;
+
+  // Duplicate items if small so marquee animation loops smoothly
+  const tickerItems = rawItems.length < 4 ? [...rawItems, ...rawItems] : rawItems;
 
   return (
     <div className={`w-full overflow-hidden bg-slate-900 border-y border-slate-800 py-3 sm:py-3.5 shadow-md relative ${className}`}>
