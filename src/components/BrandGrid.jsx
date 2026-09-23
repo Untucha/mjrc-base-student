@@ -215,7 +215,7 @@ export const BrandGrid = () => {
   const { brandsList, brandVisibility, brandTabTitles } = useStore();
   const [brandSubTab, setBrandSubTab] = React.useState('speed_scale'); // 'speed_scale' | 'crawler'
 
-  const sourceBrands = (brandsList && brandsList.length > 0) ? brandsList : BRANDS;
+  const sourceBrands = Array.isArray(brandsList) ? brandsList : BRANDS;
 
   const CRAWLER_NAMES = new Set(['FMS', 'RGT 4WD', 'RGT', 'JJR/C', 'JJRC', 'HB TOYS', 'MN MODEL', 'TRAXXAS', 'AXIAL']);
 

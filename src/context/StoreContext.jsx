@@ -791,31 +791,34 @@ export const StoreProvider = ({ children }) => {
     }
   });
 
-  // Listen to Firestore 'brands' collection in real-time with safe fallback merging
+  // Listen to Firestore 'brands' collection in real-time
   useEffect(() => {
     const brandsCol = collection(db, 'brands');
     const unsubscribe = onSnapshot(brandsCol, (snapshot) => {
-      const liveDocs = snapshot.docs.map(docSnap => ({ id: docSnap.id, ...docSnap.data() }));
-      
-      const mergedMap = new Map();
-      // 1. Seed with default 18 official brands
-      DEFAULT_OFFICIAL_BRANDS.forEach(defBrand => {
-        mergedMap.set(defBrand.id, { ...defBrand });
-      });
-
-      // 2. Overlay live Firestore brand documents onto defaults
-      liveDocs.forEach(bDoc => {
-        const key = bDoc.id || (bDoc.name ? bDoc.name.toLowerCase().trim().replace(/[^a-z0-9]/g, '-') : '');
-        if (key) {
-          const existing = mergedMap.get(key) || {};
-          mergedMap.set(key, { ...existing, ...bDoc });
+      if (snapshot.empty) {
+        const hasSeeded = localStorage.getItem('mj_brands_initial_seeded');
+        if (!hasSeeded) {
+          localStorage.setItem('mj_brands_initial_seeded', 'true');
+          console.log('[Firestore] Seeding initial default official brands to Firestore...');
+          const batch = writeBatch(db);
+          DEFAULT_OFFICIAL_BRANDS.forEach(brandObj => {
+            const ref = doc(db, 'brands', brandObj.id);
+            batch.set(ref, brandObj, { merge: true });
+          });
+          batch.commit().catch(err => console.warn('[Firestore] Error seeding initial brands:', err));
+        } else {
+          setBrandsList([]);
+          try { localStorage.setItem('mj_brands_list', JSON.stringify([])); } catch (e) {}
         }
-      });
+        return;
+      }
 
-      const mergedBrands = Array.from(mergedMap.values());
-      mergedBrands.sort((a, b) => (a.sortOrder || 0) - (b.sortOrder || 0));
-      setBrandsList(mergedBrands);
-      try { localStorage.setItem('mj_brands_list', JSON.stringify(mergedBrands)); } catch (e) {}
+      localStorage.setItem('mj_brands_initial_seeded', 'true');
+
+      const liveDocs = snapshot.docs.map(docSnap => ({ id: docSnap.id, ...docSnap.data() }));
+      liveDocs.sort((a, b) => (a.sortOrder || 0) - (b.sortOrder || 0));
+      setBrandsList(liveDocs);
+      try { localStorage.setItem('mj_brands_list', JSON.stringify(liveDocs)); } catch (e) {}
     }, (err) => {
       console.warn('[Firestore] brands listener notice:', err);
     });
@@ -920,14 +923,15 @@ export const StoreProvider = ({ children }) => {
     if (!brandIdOrName) return;
     const targetStr = String(brandIdOrName).trim();
     const targetLower = targetStr.toLowerCase();
+    const docIdSlug = targetStr.toLowerCase().replace(/[^a-z0-9]/g, '-');
 
     setBrandsList(prev => {
-      const source = (prev && prev.length > 0) ? prev : DEFAULT_OFFICIAL_BRANDS;
-      const updated = source.filter(b => {
+      const updated = (prev || []).filter(b => {
         if (!b) return false;
         const bId = String(typeof b === 'object' ? (b.id || b.name || '') : b).trim().toLowerCase();
         const bName = String(typeof b === 'object' ? (b.name || b.id || '') : b).trim().toLowerCase();
-        return bId !== targetLower && bName !== targetLower;
+        const bSlug = bId.replace(/[^a-z0-9]/g, '-');
+        return bId !== targetLower && bName !== targetLower && bSlug !== docIdSlug;
       });
       try { localStorage.setItem('mj_brands_list', JSON.stringify(updated)); } catch (e) {}
       return updated;
@@ -938,13 +942,23 @@ export const StoreProvider = ({ children }) => {
       delete copy[targetStr];
       delete copy[targetStr.toUpperCase()];
       delete copy[targetStr.toLowerCase()];
+      try { localStorage.setItem('mj_brand_visibility', JSON.stringify(copy)); } catch (e) {}
       return copy;
     });
 
-    await deleteDoc(doc(db, 'brands', targetStr)).catch(err => {
+    try {
+      await deleteDoc(doc(db, 'brands', targetStr));
+      if (docIdSlug !== targetStr) {
+        await deleteDoc(doc(db, 'brands', docIdSlug)).catch(() => {});
+      }
+      if (targetLower !== targetStr && targetLower !== docIdSlug) {
+        await deleteDoc(doc(db, 'brands', targetLower)).catch(() => {});
+      }
+      showToast(`Brand "${targetStr}" permanently deleted!`);
+    } catch (err) {
       console.error('[Firestore] deleteBrand error:', err);
-    });
-    showToast(`Brand "${targetStr}" permanently deleted!`);
+      showToast('Failed to delete brand from database');
+    }
   }, [showToast]);
 
   const [categoriesList, setCategoriesList] = useState(() => {
@@ -960,25 +974,30 @@ export const StoreProvider = ({ children }) => {
   useEffect(() => {
     const catCol = collection(db, 'categories');
     const unsubscribe = onSnapshot(catCol, (snapshot) => {
-      const liveDocs = snapshot.docs.map(docSnap => ({ id: docSnap.id, ...docSnap.data() }));
-      
-      const mergedMap = new Map();
-      DEFAULT_CATEGORIES.forEach(defCat => {
-        mergedMap.set(defCat.id, { ...defCat });
-      });
-
-      liveDocs.forEach(cDoc => {
-        const key = cDoc.id || cDoc.slug || (cDoc.name ? cDoc.name.toLowerCase().trim().replace(/[^a-z0-9]/g, '-') : '');
-        if (key) {
-          const existing = mergedMap.get(key) || {};
-          mergedMap.set(key, { ...existing, ...cDoc });
+      if (snapshot.empty) {
+        const hasSeeded = localStorage.getItem('mj_categories_initial_seeded');
+        if (!hasSeeded) {
+          localStorage.setItem('mj_categories_initial_seeded', 'true');
+          console.log('[Firestore] Seeding initial default categories to Firestore...');
+          const batch = writeBatch(db);
+          DEFAULT_CATEGORIES.forEach(catObj => {
+            const ref = doc(db, 'categories', catObj.id);
+            batch.set(ref, catObj, { merge: true });
+          });
+          batch.commit().catch(err => console.warn('[Firestore] Error seeding initial categories:', err));
+        } else {
+          setCategoriesList([]);
+          try { localStorage.setItem('mj_categories_list', JSON.stringify([])); } catch (e) {}
         }
-      });
+        return;
+      }
 
-      const mergedCats = Array.from(mergedMap.values());
-      mergedCats.sort((a, b) => (a.sortOrder || 0) - (b.sortOrder || 0));
-      setCategoriesList(mergedCats);
-      try { localStorage.setItem('mj_categories_list', JSON.stringify(mergedCats)); } catch (e) {}
+      localStorage.setItem('mj_categories_initial_seeded', 'true');
+
+      const liveDocs = snapshot.docs.map(docSnap => ({ id: docSnap.id, ...docSnap.data() }));
+      liveDocs.sort((a, b) => (a.sortOrder || 0) - (b.sortOrder || 0));
+      setCategoriesList(liveDocs);
+      try { localStorage.setItem('mj_categories_list', JSON.stringify(liveDocs)); } catch (e) {}
     }, (err) => {
       console.warn('[Firestore] categories listener notice:', err);
     });

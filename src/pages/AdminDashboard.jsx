@@ -4062,7 +4062,7 @@ export const AdminDashboard = () => {
         {/* HUB 6: SHOP BY BRAND (ISOLATED DUAL BRAND POOLS & VISIBILITY TOGGLE) */}
         {activeTab === 'brands' && (() => {
           const CRAWLER_NAMES = new Set(['FMS', 'RGT 4WD', 'RGT', 'JJR/C', 'JJRC', 'HB TOYS', 'MN MODEL', 'TRAXXAS', 'AXIAL']);
-          const rawBrandsList = (brandsList && brandsList.length > 0) ? brandsList : OFFICIAL_18_BRANDS.map(name => ({ name }));
+          const rawBrandsList = Array.isArray(brandsList) ? brandsList : OFFICIAL_18_BRANDS.map(name => ({ name }));
 
           const getBrandGroup = (b) => {
             if (typeof b === 'object' && b.brandGroup) return b.brandGroup;
