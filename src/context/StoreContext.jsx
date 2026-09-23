@@ -69,6 +69,16 @@ const DEFAULT_PRODUCTS = [];
 
 const DEFAULT_LATEST_RC_CARS = [];
 
+const DEFAULT_DRIVER_LOGINS = [];
+const DEFAULT_OTP_LOGS = [];
+const DEFAULT_HERO_BANNER = null;
+const DEFAULT_ADDONS = [];
+const DEFAULT_ORDERS = [];
+const DEFAULT_CUSTOMERS = [];
+const DEFAULT_USER = null;
+const DEFAULT_REFERRAL_NETWORK = [];
+const DEFAULT_WHATSAPP_TEMPLATE = null;
+
 export const isMockItem = (p) => {
   if (!p) return true;
   if (p.isMock === true) return true;
