@@ -1,4 +1,5 @@
 import { useStore, DEFAULT_TICKER_ITEMS } from '../context/StoreContext';
+import { ShieldCheck, Video, Rocket, Wrench, CheckCircle2 } from 'lucide-react';
 
 export const RunningTicker = ({ className = '' }) => {
   const { marqueeTicker } = useStore();
