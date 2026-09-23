@@ -4299,7 +4299,19 @@ export const AdminDashboard = () => {
                 const catProds = displayProducts.filter(p => {
                   const pCat = (p.category || '').toLowerCase().trim();
                   const cName = catName.toLowerCase().trim();
-                  return pCat === cName || pCat.includes(cName) || cName.includes(pCat);
+                  const cSlug = (cat.slug || cat.id || '').toLowerCase().trim();
+                  const normPCat = pCat.replace(/[\s\-_]+/g, '');
+                  const normCName = cName.replace(/[\s\-_]+/g, '');
+                  const normCSlug = cSlug.replace(/[\s\-_]+/g, '');
+                  if (pCat === cName || pCat === cSlug || normPCat === normCName || normPCat === normCSlug) return true;
+                  if (normCName.includes('crawler') && normPCat.includes('crawler')) return true;
+                  if (normCName.includes('trail') && normPCat.includes('trail')) return true;
+                  if (normCName.includes('drift') && normPCat.includes('drift')) return true;
+                  if (normCName.includes('basher') && (normPCat.includes('basher') || normPCat.includes('monster'))) return true;
+                  if (normCName.includes('monster') && (normPCat.includes('monster') || normPCat.includes('basher'))) return true;
+                  if (normCName.includes('machinery') && (normPCat.includes('machinery') || normPCat.includes('construction') || normPCat.includes('heavy'))) return true;
+                  if (normCName.includes('shortcourse') && normPCat.includes('shortcourse')) return true;
+                  return cName && (pCat.includes(cName) || cName.includes(pCat));
                 });
 
                 return (
@@ -4570,7 +4582,19 @@ export const AdminDashboard = () => {
                 const pCat = (p.category || '').toLowerCase().trim();
                 const cName = catName.toLowerCase().trim();
                 const cId = catId.toLowerCase();
-                return pCat === cName || (cId && pCat === cId) || (cName && pCat.includes(cName)) || (cName && cName.includes(pCat));
+                const cSlug = (cat.slug || '').toLowerCase().trim();
+                const normPCat = pCat.replace(/[\s\-_]+/g, '');
+                const normCName = cName.replace(/[\s\-_]+/g, '');
+                const normCId = cId.replace(/[\s\-_]+/g, '');
+                if (pCat === cName || pCat === cId || pCat === cSlug || normPCat === normCName || normPCat === normCId) return true;
+                if (normCName.includes('crawler') && normPCat.includes('crawler')) return true;
+                if (normCName.includes('trail') && normPCat.includes('trail')) return true;
+                if (normCName.includes('drift') && normPCat.includes('drift')) return true;
+                if (normCName.includes('basher') && (normPCat.includes('basher') || normPCat.includes('monster'))) return true;
+                if (normCName.includes('monster') && (normPCat.includes('monster') || normPCat.includes('basher'))) return true;
+                if (normCName.includes('machinery') && (normPCat.includes('machinery') || normPCat.includes('construction') || normPCat.includes('heavy'))) return true;
+                if (normCName.includes('shortcourse') && normPCat.includes('shortcourse')) return true;
+                return cName && (pCat.includes(cName) || cName.includes(pCat));
               });
               const isCatVisible = cat.isVisible !== false && !(categoryVisibility && categoryVisibility[catName] === false);
               const categoryBrands = Array.from(new Set(catProducts.map(p => p.brand).filter(Boolean)));

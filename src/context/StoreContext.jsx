@@ -112,12 +112,12 @@ const DEFAULT_BRAND_VISIBILITY = {
 };
 
 export const DEFAULT_CATEGORIES = [
-  { id: 'cat-crawler', name: 'RC Crawlers', slug: 'rc-crawlers', label: 'RC Crawlers', image: 'https://images.unsplash.com/photo-1594787318286-3d835c1d207f?auto=format&fit=crop&w=300&q=80', icon: '🧗', description: 'Extreme 4WD trail & rock crawlers with portal axles and scale specs.' },
-  { id: 'cat-trail-pickups', name: 'Trail Pickups', slug: 'trail-pickups', label: 'Trail Pickups', image: 'https://images.unsplash.com/photo-1568605117036-5fe5e7bab0b7?auto=format&fit=crop&w=300&q=80', icon: '🛻', description: 'Scale 4x4 trail pickups and adventure rigs.' },
-  { id: 'cat-drift-rally', name: 'Drift and Rally', slug: 'drift-and-rally', label: 'Drift and Rally', image: 'https://images.unsplash.com/photo-1552519507-da3b142c6e3d?auto=format&fit=crop&w=300&q=80', icon: '🏎️', description: 'Precision drift machines and high-speed rally cars.' },
-  { id: 'cat-bashers-monster', name: 'Bashers and Monster', slug: 'bashers-and-monster', label: 'Bashers and Monster', image: 'https://images.unsplash.com/photo-1594787318286-3d835c1d207f?auto=format&fit=crop&w=300&q=80', icon: '⚡', description: 'High-speed bashing monster trucks and stunt vehicles.' },
-  { id: 'cat-heavy-machinery', name: 'Heavy Machinery', slug: 'heavy-machinery', label: 'Heavy Machinery', image: 'https://images.unsplash.com/photo-1583121274602-3e2820c69888?auto=format&fit=crop&w=300&q=80', icon: '🚜', description: 'Full hydraulic excavators, heavy dump trucks & loaders.' },
-  { id: 'cat-short-course', name: 'Short course', slug: 'short-course', label: 'Short course', image: 'https://images.unsplash.com/photo-1544620347-c4fd4a3d5957?auto=format&fit=crop&w=300&q=80', icon: '🏁', description: 'Off-road short course racing trucks and buggies.' }
+  { id: 'rc-crawlers', name: 'RC Crawlers', slug: 'rc-crawlers', label: 'RC Crawlers', image: 'https://images.unsplash.com/photo-1594787318286-3d835c1d207f?auto=format&fit=crop&w=300&q=80', icon: '🧗', description: 'Extreme 4WD trail & rock crawlers with portal axles and scale specs.', isVisible: true, sortOrder: 1 },
+  { id: 'trail-pickups', name: 'Trail Pickups', slug: 'trail-pickups', label: 'Trail Pickups', image: 'https://images.unsplash.com/photo-1568605117036-5fe5e7bab0b7?auto=format&fit=crop&w=300&q=80', icon: '🛻', description: 'Scale 4x4 trail pickups and adventure rigs.', isVisible: true, sortOrder: 2 },
+  { id: 'drift-and-rally', name: 'Drift and Rally', slug: 'drift-and-rally', label: 'Drift and Rally', image: 'https://images.unsplash.com/photo-1552519507-da3b142c6e3d?auto=format&fit=crop&w=300&q=80', icon: '🏎️', description: 'Precision drift machines and high-speed rally cars.', isVisible: true, sortOrder: 3 },
+  { id: 'bashers-and-monster', name: 'Bashers and Monster', slug: 'bashers-and-monster', label: 'Bashers and Monster', image: 'https://images.unsplash.com/photo-1594787318286-3d835c1d207f?auto=format&fit=crop&w=300&q=80', icon: '⚡', description: 'High-speed bashing monster trucks and stunt vehicles.', isVisible: true, sortOrder: 4 },
+  { id: 'heavy-machinery', name: 'Heavy Machinery', slug: 'heavy-machinery', label: 'Heavy Machinery', image: 'https://images.unsplash.com/photo-1583121274602-3e2820c69888?auto=format&fit=crop&w=300&q=80', icon: '🚜', description: 'Full hydraulic excavators, heavy dump trucks & loaders.', isVisible: true, sortOrder: 5 },
+  { id: 'short-course', name: 'Short course', slug: 'short-course', label: 'Short course', image: 'https://images.unsplash.com/photo-1544620347-c4fd4a3d5957?auto=format&fit=crop&w=300&q=80', icon: '🏁', description: 'Off-road short course racing trucks and buggies.', isVisible: true, sortOrder: 6 }
 ];
 
 export const DEFAULT_BRANDS = [
@@ -970,34 +970,54 @@ export const StoreProvider = ({ children }) => {
     }
   });
 
-  // Listen to Firestore 'categories' collection in real-time
+  // Listen to Firestore 'categories' collection in real-time & ensure all 6 core categories exist
   useEffect(() => {
     const catCol = collection(db, 'categories');
     const unsubscribe = onSnapshot(catCol, (snapshot) => {
-      if (snapshot.empty) {
-        const hasSeeded = localStorage.getItem('mj_categories_initial_seeded');
-        if (!hasSeeded) {
-          localStorage.setItem('mj_categories_initial_seeded', 'true');
-          console.log('[Firestore] Seeding initial default categories to Firestore...');
-          const batch = writeBatch(db);
-          DEFAULT_CATEGORIES.forEach(catObj => {
-            const ref = doc(db, 'categories', catObj.id);
-            batch.set(ref, catObj, { merge: true });
-          });
-          batch.commit().catch(err => console.warn('[Firestore] Error seeding initial categories:', err));
-        } else {
-          setCategoriesList([]);
-          try { localStorage.setItem('mj_categories_list', JSON.stringify([])); } catch (e) {}
-        }
-        return;
-      }
-
-      localStorage.setItem('mj_categories_initial_seeded', 'true');
-
       const liveDocs = snapshot.docs.map(docSnap => ({ id: docSnap.id, ...docSnap.data() }));
-      liveDocs.sort((a, b) => (a.sortOrder || 0) - (b.sortOrder || 0));
-      setCategoriesList(liveDocs);
-      try { localStorage.setItem('mj_categories_list', JSON.stringify(liveDocs)); } catch (e) {}
+      
+      const mergedMap = new Map();
+      // 1. Seed with default 6 core categories
+      DEFAULT_CATEGORIES.forEach(defCat => {
+        mergedMap.set(defCat.id, { ...defCat });
+        if (defCat.slug) mergedMap.set(defCat.slug, { ...defCat });
+      });
+
+      // 2. Overlay live Firestore category documents
+      liveDocs.forEach(cDoc => {
+        const key = cDoc.id || cDoc.slug || (cDoc.name ? cDoc.name.toLowerCase().trim().replace(/[^a-z0-9]/g, '-') : '');
+        if (key) {
+          const existing = mergedMap.get(key) || {};
+          mergedMap.set(key, { ...existing, ...cDoc });
+          if (cDoc.id) mergedMap.set(cDoc.id, { ...existing, ...cDoc });
+        }
+      });
+
+      // Deduplicate by category ID/slug
+      const uniqueCatsMap = new Map();
+      Array.from(mergedMap.values()).forEach(cat => {
+        const catId = cat.id || cat.slug || cat.name;
+        if (!uniqueCatsMap.has(catId)) {
+          uniqueCatsMap.set(catId, cat);
+        }
+      });
+
+      const mergedCats = Array.from(uniqueCatsMap.values());
+      mergedCats.sort((a, b) => (a.sortOrder || 0) - (b.sortOrder || 0));
+      setCategoriesList(mergedCats);
+      try { localStorage.setItem('mj_categories_list', JSON.stringify(mergedCats)); } catch (e) {}
+
+      // Auto-sync missing core categories to Firestore if not present in snapshot
+      const existingIds = new Set(snapshot.docs.map(d => d.id));
+      const missingCore = DEFAULT_CATEGORIES.filter(c => !existingIds.has(c.id));
+      if (missingCore.length > 0) {
+        const batch = writeBatch(db);
+        missingCore.forEach(mCat => {
+          const ref = doc(db, 'categories', mCat.id);
+          batch.set(ref, mCat, { merge: true });
+        });
+        batch.commit().catch(err => console.warn('[Firestore] Error syncing missing core categories:', err));
+      }
     }, (err) => {
       console.warn('[Firestore] categories listener notice:', err);
     });
