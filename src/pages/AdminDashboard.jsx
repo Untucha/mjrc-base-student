@@ -145,6 +145,7 @@ const FullProductModal = ({ product = null, preset = null, onClose, onSave }) =>
     showVideoTab: product ? product.showVideoTab !== false : true,
     description: product?.description || '',
     boxContents: product?.boxContents || product?.includedParts || '',
+    detailedSpecs: product?.detailedSpecs || product?.specificationsText || '',
     hasColors: product ? Boolean(product.hasColors && Array.isArray(product.availableColors) && product.availableColors.length > 0) : false,
     availableColors: Array.isArray(product?.availableColors) ? product.availableColors : (typeof product?.availableColors === 'string' ? product.availableColors.split(',').map(c => c.trim()).filter(Boolean) : []),
     colorsInput: Array.isArray(product?.availableColors) ? product.availableColors.join(', ') : (typeof product?.availableColors === 'string' ? product.availableColors : ''),
@@ -187,8 +188,8 @@ const FullProductModal = ({ product = null, preset = null, onClose, onSave }) =>
     const cleanImages = imagesList.map(s => s.trim()).filter(Boolean);
     const mainImg = cleanImages[0] || 'https://images.unsplash.com/photo-1594787318286-3d835c1d207f?auto=format&fit=crop&w=800&q=80';
 
-    const catLower = formData.category.trim().toLowerCase();
-    const titleLower = formData.title.trim().toLowerCase();
+    const catLower = (formData.category || '').trim().toLowerCase();
+    const titleLower = (formData.title || '').trim().toLowerCase();
     const isScaleModel = (
       catLower === 'scale models' ||
       catLower === 'scale model' ||
@@ -201,9 +202,9 @@ const FullProductModal = ({ product = null, preset = null, onClose, onSave }) =>
       titleLower.includes('diecast')
     );
 
-    const finalCategory = isScaleModel && (!formData.category.trim() || catLower === 'scale model' || catLower === 'diecast')
+    const finalCategory = isScaleModel && (!formData.category || !formData.category.trim() || catLower === 'scale model' || catLower === 'diecast')
       ? 'Scale Models'
-      : formData.category.trim();
+      : (formData.category || '').trim();
 
     const calculatedRupeeDiscount = formData.coinDiscountAmount !== undefined && formData.coinDiscountAmount !== null && formData.coinDiscountAmount !== ''
       ? Number(formData.coinDiscountAmount)
@@ -218,17 +219,17 @@ const FullProductModal = ({ product = null, preset = null, onClose, onSave }) =>
       : [];
 
     const payload = {
-      title: formData.title.trim(),
-      name: formData.title.trim(),
-      subtitle: formData.subtitle.trim(),
-      price: Number(formData.price),
-      mrp: Number(formData.mrp || formData.price),
-      originalPrice: Number(formData.mrp || formData.price),
-      category: finalCategory,
+      title: (formData.title || '').trim(),
+      name: (formData.title || '').trim(),
+      subtitle: (formData.subtitle || '').trim(),
+      price: Number(formData.price || 0),
+      mrp: Number(formData.mrp || formData.price || 0),
+      originalPrice: Number(formData.mrp || formData.price || 0),
+      category: finalCategory || 'Unassigned',
       isScaleModel: Boolean(isScaleModel),
-      scale: formData.scale.trim(),
-      brand: formData.brand.trim(),
-      badge: formData.badge.trim(),
+      scale: (formData.scale || '').trim(),
+      brand: (formData.brand || '').trim(),
+      badge: (formData.badge || '').trim(),
       hasColors: Boolean(formData.hasColors && cleanColors.length > 0),
       availableColors: cleanColors,
       allowCoinRedemption: Boolean(formData.allowCoinRedemption !== false),
@@ -242,17 +243,17 @@ const FullProductModal = ({ product = null, preset = null, onClose, onSave }) =>
       imageUrl: mainImg,
       images: cleanImages,
       galleryImages: cleanImages,
-      model3dUrl: formData.model3dUrl,
-      model3d: formData.model3dUrl,
+      model3dUrl: formData.model3dUrl || '',
+      model3d: formData.model3dUrl || '',
       enable3DView: Boolean(formData.enable3DView),
       show3dViewer: Boolean(formData.enable3DView),
-      videoUrl: formData.videoUrl,
+      videoUrl: formData.videoUrl || '',
       showVideoTab: Boolean(formData.showVideoTab),
-      description: formData.description,
-      boxContents: formData.boxContents,
-      includedParts: formData.boxContents,
-      detailedSpecs: formData.detailedSpecs,
-      specificationsText: formData.detailedSpecs,
+      description: formData.description || '',
+      boxContents: formData.boxContents || '',
+      includedParts: formData.boxContents || '',
+      detailedSpecs: formData.detailedSpecs || '',
+      specificationsText: formData.detailedSpecs || '',
       inStock: Boolean(formData.inStock),
       remainingUnits: Number(formData.remainingUnits || 0),
       hidden: Boolean(formData.hidden),
@@ -260,12 +261,12 @@ const FullProductModal = ({ product = null, preset = null, onClose, onSave }) =>
       rating: Number(formData.rating || 4.9),
       reviewsCount: Number(formData.reviewsCount || 35),
       specs: {
-        motor: formData.motor,
-        esc: formData.esc,
-        radio: formData.radio,
-        drivetrain: formData.drivetrain,
-        topSpeed: formData.topSpeed,
-        battery: formData.battery
+        motor: formData.motor || '',
+        esc: formData.esc || '',
+        radio: formData.radio || '',
+        drivetrain: formData.drivetrain || '',
+        topSpeed: formData.topSpeed || '',
+        battery: formData.battery || ''
       }
     };
 

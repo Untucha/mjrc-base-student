@@ -52,6 +52,24 @@ export const broadcastMasterSync = (type, payload) => {
 
 export const broadcastLiveTelemetry = (type, payload) => broadcastMasterSync(type, payload);
 
+// Utility to scrub undefined properties from objects before Firestore setDoc / updateDoc calls
+export const sanitizeForFirestore = (obj) => {
+  if (obj === null || obj === undefined) return null;
+  if (Array.isArray(obj)) {
+    return obj.map(v => (v === undefined ? null : sanitizeForFirestore(v)));
+  }
+  if (typeof obj === 'object' && !(obj instanceof Date)) {
+    const clean = {};
+    for (const [key, value] of Object.entries(obj)) {
+      if (value !== undefined) {
+        clean[key] = sanitizeForFirestore(value);
+      }
+    }
+    return clean;
+  }
+  return obj;
+};
+
 // Universal Multi-Device Live Sync Engine & Storage Bridge
 export const broadcastCatalogUpdate = (updatedProducts) => {
   if (!updatedProducts) return;
@@ -2323,13 +2341,15 @@ export const StoreProvider = ({ children }) => {
 
     showToast('Product updated live!');
 
+    const cleanPatch = sanitizeForFirestore(patchPayload);
+
     try {
       const docRef = doc(db, 'products', String(targetId));
-      await updateDoc(docRef, patchPayload);
+      await updateDoc(docRef, cleanPatch);
     } catch (err) {
       try {
         const docRef = doc(db, 'products', String(targetId));
-        await setDoc(docRef, patchPayload, { merge: true });
+        await setDoc(docRef, cleanPatch, { merge: true });
       } catch (e) {
         console.error('[Firestore] updateProduct error:', e);
       }
@@ -2337,22 +2357,24 @@ export const StoreProvider = ({ children }) => {
   }, [showToast]);
 
   const addProduct = useCallback(async (newProd) => {
-    const newId = newProd.id || `rc-${Date.now().toString().slice(-4)}`;
+    const generatedDocRef = doc(collection(db, 'products'));
+    const newId = String(newProd.id || generatedDocRef.id);
     const fullProduct = {
       ...newProd,
       id: newId,
       title: newProd.title || newProd.name || 'Untitled Scale Model',
       name: newProd.name || newProd.title || 'Untitled Scale Model',
-      category: newProd.category || '1:64 Scale',
+      category: newProd.category || 'Bashers and Monster',
       brand: newProd.brand || 'MJ SCALE',
-      scale: newProd.scale || '1:64',
+      scale: newProd.scale || '1:10',
       price: Number(newProd.price || 0),
       originalPrice: Number(newProd.originalPrice || newProd.mrp || newProd.price || 0),
       mrp: Number(newProd.mrp || newProd.originalPrice || newProd.price || 0),
       discount: (newProd.originalPrice || newProd.mrp) ? Math.round((((newProd.originalPrice || newProd.mrp) - (newProd.price || 0)) / (newProd.originalPrice || newProd.mrp)) * 100) : 20,
       rcCoins: Math.floor(Number(newProd.price || 0) * 0.01),
-      inStock: newProd.inStock !== undefined ? newProd.inStock : true,
-      hidden: false,
+      inStock: newProd.inStock !== undefined ? Boolean(newProd.inStock) : true,
+      hidden: Boolean(newProd.hidden || false),
+      isVisible: newProd.isVisible !== undefined ? Boolean(newProd.isVisible) : true,
       rating: newProd.rating || 5.0,
       reviewsCount: newProd.reviewsCount || 1,
       boughtToday: 5,
@@ -2368,19 +2390,30 @@ export const StoreProvider = ({ children }) => {
         esc: 'Micro ESC Unit',
         battery: 'Rechargeable LiPo',
         radio: '2.4GHz Controller'
-      }
+      },
+      createdAt: new Date().toISOString()
     };
 
-    setProducts(prev => [fullProduct, ...(prev || [])]);
-    showToast(`Added scale model "${(fullProduct.title || fullProduct.name).substring(0, 20)}..."!`);
+    const cleanFirestoreProduct = sanitizeForFirestore(fullProduct);
 
+    // 1. Explicitly write to Firestore products collection
     try {
-      const docRef = doc(db, 'products', String(newId));
-      await setDoc(docRef, fullProduct);
+      const docRef = doc(db, 'products', newId);
+      await setDoc(docRef, cleanFirestoreProduct);
+      console.log('✅ [Firestore] Product successfully created and persisted in products collection:', newId);
     } catch (err) {
-      console.error('[Firestore] addProduct error:', err);
+      console.error('❌ [Firestore] addProduct error:', err);
+      showToast(`Error saving product to database: ${err.message}`);
     }
 
+    // 2. Update local state immediately with newly created Firestore ID
+    setProducts(prev => {
+      const exists = (prev || []).some(p => String(p.id) === String(newId));
+      if (exists) return prev.map(p => String(p.id) === String(newId) ? fullProduct : p);
+      return [fullProduct, ...(prev || [])];
+    });
+
+    showToast(`Added vehicle "${(fullProduct.title || fullProduct.name).substring(0, 20)}..."!`);
     return fullProduct;
   }, [showToast]);
 
