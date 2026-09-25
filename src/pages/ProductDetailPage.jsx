@@ -29,7 +29,7 @@ export const ProductDetailPage = () => {
   const productId = paramProductId || paramId || '';
   const navigate = useNavigate();
   const location = useLocation();
-  const { products, allProducts, addToCart, setIsCartOpen, wishlist, toggleWishlist } = useStore();
+  const { products, allProducts, addToCart, setIsCartOpen, setIsCheckoutOpen, wishlist, toggleWishlist } = useStore();
 
   const [activeMediaType, setActiveMediaType] = useState('image'); // 'image' | '3d' | 'video'
   const [activeImageIndex, setActiveImageIndex] = useState(0);
@@ -227,6 +227,29 @@ export const ProductDetailPage = () => {
     setIsCartOpen(true);
   };
 
+  const handleBuyNow = () => {
+    addToCart(product, [], selectedColor);
+    setIsCheckoutOpen(true);
+  };
+
+  const discountPercent = useMemo(() => {
+    if (!product) return 0;
+    if (product.discount && product.discount > 0) return Number(product.discount);
+    if (product.mrp && product.price && product.mrp > product.price) {
+      return Math.round(((product.mrp - product.price) / product.mrp) * 100);
+    }
+    return 0;
+  }, [product]);
+
+  const coinReward = useMemo(() => {
+    if (!product) return 0;
+    if (product.rcCoins) return product.rcCoins;
+    if (product.coins) return product.coins;
+    return Math.floor((product.price || 0) * 0.05);
+  }, [product]);
+
+  const inStock = product ? (product.stock === undefined || product.stock > 0 || product.inStock !== false) : true;
+
   const whatsappUrl = `https://wa.me/919686078395?text=${encodeURIComponent(
     `Hi MJ RC BASE Expert, I am interested in buying the ${product.title} (₹${totalPrice.toLocaleString('en-IN')}). Can you assist with dispatch details?`
   )}`;
@@ -246,7 +269,7 @@ export const ProductDetailPage = () => {
       {/* Main Showcase Layout */}
       <div className="bg-white border border-slate-200/80 rounded-3xl p-6 sm:p-8 lg:p-10 shadow-xs grid grid-cols-1 lg:grid-cols-12 gap-8">
         
-        {/* Left Column: Image & Media Controls */}
+        {/* Left Column: Image & Media Controls (STEP 1) */}
         <div className="lg:col-span-6 space-y-4">
           
           {/* Top Interactive Media Tabs */}
@@ -429,95 +452,68 @@ export const ProductDetailPage = () => {
           </div>
         </div>
 
-        {/* Right Column: Title, Specs & Spares Checklist */}
-        <div className="lg:col-span-6 space-y-6 flex flex-col justify-between">
+        {/* Right Column: Title, Price, Buy Buttons, Colors, Coins & Specs */}
+        <div className="lg:col-span-6 space-y-5 flex flex-col justify-between">
           <div className="space-y-4">
             
-            <div className="flex items-center gap-2">
-              {product.brand && (
-                <span className="bg-emerald-50 text-emerald-800 text-xs font-black px-3 py-1 rounded-md uppercase tracking-wider border border-emerald-200">
-                  {product.brand}
+            {/* STEP 2: Product Title, Brand Badge & Rating */}
+            <div className="space-y-2">
+              <div className="flex items-center justify-between flex-wrap gap-2">
+                <div className="flex items-center gap-2">
+                  {product.brand && (
+                    <span className="bg-emerald-50 text-emerald-800 text-xs font-black px-3 py-1 rounded-md uppercase tracking-wider border border-emerald-200">
+                      {product.brand}
+                    </span>
+                  )}
+                  {product.scale && (
+                    <span className="text-xs font-bold text-slate-500 bg-slate-100 px-2 py-0.5 rounded border border-slate-200">{product.scale}</span>
+                  )}
+                </div>
+
+                <div className="flex items-center gap-1 bg-amber-50 border border-amber-200 px-2.5 py-1 rounded-lg text-xs font-extrabold text-amber-900">
+                  <Star className="w-3.5 h-3.5 fill-amber-400 text-amber-500 shrink-0" />
+                  <span>{product.rating || 4.9}</span>
+                  <span className="text-slate-400 font-semibold text-[10px]">({product.reviewsCount || 128} Reviews)</span>
+                </div>
+              </div>
+
+              <h1 className="text-2xl sm:text-4xl font-black text-slate-900 leading-tight tracking-tight">
+                {product.title}
+              </h1>
+            </div>
+
+            {/* STEP 3: PRICE BLOCK */}
+            <div className="bg-slate-50 border border-slate-200/80 rounded-2xl p-4 space-y-2">
+              <div className="flex items-baseline justify-between flex-wrap gap-2">
+                <div>
+                  <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider block">Special Offer Price</span>
+                  <div className="flex items-baseline gap-2.5 flex-wrap">
+                    <span className="text-3xl sm:text-4xl font-black text-emerald-700 tracking-tight">
+                      ₹{product.price?.toLocaleString('en-IN')}
+                    </span>
+                    {product.mrp && product.mrp > product.price && (
+                      <span className="text-sm sm:text-base font-semibold text-slate-400 line-through">
+                        ₹{product.mrp?.toLocaleString('en-IN')}
+                      </span>
+                    )}
+                    {discountPercent > 0 && (
+                      <span className="bg-emerald-600 text-white font-black text-xs px-2.5 py-0.5 rounded-full uppercase tracking-wider shadow-xs">
+                        SAVE {discountPercent}%
+                      </span>
+                    )}
+                  </div>
+                </div>
+
+                <span className={`inline-flex items-center gap-1.5 text-xs font-bold px-2.5 py-1 rounded-full border ${
+                  inStock ? 'bg-emerald-50 text-emerald-800 border-emerald-200' : 'bg-rose-50 text-rose-800 border-rose-200'
+                }`}>
+                  <span className={`w-2 h-2 rounded-full ${inStock ? 'bg-emerald-500 animate-pulse' : 'bg-rose-500'}`} />
+                  {inStock ? 'In Stock • Mysore Express Ready' : 'Out of Stock'}
                 </span>
-              )}
-              {product.scale && (
-                <span className="text-xs font-bold text-slate-500">{product.scale}</span>
-              )}
-            </div>
-
-            <h1 className="text-2xl sm:text-4xl font-black text-slate-900 leading-tight">
-              {product.title}
-            </h1>
-
-            <p className="text-xs sm:text-sm text-slate-600 leading-relaxed font-medium">
-              {product.description}
-            </p>
-
-            {/* Technical Specifications Table */}
-            <div className="bg-slate-50 border border-slate-200 rounded-2xl p-4 space-y-3 text-xs">
-              <div className="font-extrabold text-emerald-700 uppercase tracking-wider flex items-center gap-1.5">
-                <Radio className="w-4 h-4 text-emerald-600" /> Technical Specifications
-              </div>
-              <div className="grid grid-cols-2 gap-3 text-slate-800 font-semibold">
-                <div><span className="text-slate-500 font-normal">Motor System:</span> {product.specs?.motor}</div>
-                <div><span className="text-slate-500 font-normal">ESC Unit:</span> {product.specs?.esc}</div>
-                <div><span className="text-slate-500 font-normal">Radio Transmitter:</span> {product.specs?.radio}</div>
-                <div><span className="text-slate-500 font-normal">Drivetrain:</span> {product.specs?.drivetrain}</div>
               </div>
             </div>
 
-            {/* Included Parts & Box Contents (Collapsible Drawer) */}
-            <div className="bg-slate-50 border border-slate-200 rounded-2xl p-4 space-y-2 text-xs">
-              <button
-                type="button"
-                onClick={() => setIsBoxOpen(!isBoxOpen)}
-                className="w-full font-extrabold text-slate-900 uppercase tracking-wider flex items-center justify-between cursor-pointer select-none"
-              >
-                <div className="flex items-center gap-1.5">
-                  <Box className="w-4 h-4 text-emerald-600" />
-                  <span>Included Parts & Box Contents ({parsedBoxContents.length} items)</span>
-                </div>
-                {isBoxOpen ? <ChevronUp size={16} className="text-slate-400" /> : <ChevronDown size={16} className="text-slate-400" />}
-              </button>
-
-              {isBoxOpen && (
-                <ul className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-slate-700 font-medium pt-2 border-t border-slate-200/60">
-                  {parsedBoxContents.map((item, idx) => (
-                    <li key={idx} className="flex items-center gap-2">
-                      <Check className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
-                      <span>{item}</span>
-                    </li>
-                  ))}
-                </ul>
-              )}
-            </div>
-
-            {/* Product Specifications (Collapsible Drawer) */}
-            <div className="bg-slate-50 border border-slate-200 rounded-2xl p-4 space-y-2 text-xs">
-              <button
-                type="button"
-                onClick={() => setIsSpecsOpen(!isSpecsOpen)}
-                className="w-full font-extrabold text-slate-900 uppercase tracking-wider flex items-center justify-between cursor-pointer select-none"
-              >
-                <div className="flex items-center gap-1.5">
-                  <Radio className="w-4 h-4 text-emerald-600" />
-                  <span>⚙️ PRODUCT SPECIFICATIONS ({parsedDetailedSpecs.length})</span>
-                </div>
-                {isSpecsOpen ? <ChevronUp size={16} className="text-slate-400" /> : <ChevronDown size={16} className="text-slate-400" />}
-              </button>
-
-              {isSpecsOpen && (
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-slate-700 font-medium pt-2 border-t border-slate-200/60">
-                  {parsedDetailedSpecs.map((item, idx) => (
-                    <div key={idx} className="flex items-start gap-1.5">
-                      <span className="text-slate-400 font-normal shrink-0">{item.label}:</span>
-                      <span className="text-slate-900 font-semibold">{item.value}</span>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
-
-            {/* Color Selection UI */}
+            {/* STEP 4: Color / Variant Selection (if applicable) */}
             {hasColorVariants && colorList.length > 0 && (
               <div className="bg-slate-50 border border-slate-200 rounded-2xl p-4 space-y-2.5">
                 <div className="flex items-center justify-between text-xs">
@@ -567,47 +563,129 @@ export const ProductDetailPage = () => {
               </div>
             )}
 
-          </div>
+            {/* STEP 5: Primary Action Buttons ("BUY NOW" and "ADD TO CART") */}
+            <div className="space-y-3 pt-1">
+              <div className="flex flex-col sm:flex-row gap-3">
+                <button
+                  type="button"
+                  onClick={handleBuyNow}
+                  disabled={!inStock}
+                  className="flex-1 bg-red-600 hover:bg-red-700 text-white font-black text-sm py-3.5 sm:py-4 rounded-2xl shadow-md shadow-red-600/20 flex items-center justify-center gap-2 active:scale-98 transition-all disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
+                >
+                  <Zap className="w-5 h-5 fill-white stroke-none" />
+                  <span>BUY NOW • ₹{totalPrice.toLocaleString('en-IN')}</span>
+                </button>
 
-          {/* Pricing & Add to Cart Action */}
-          <div className="pt-4 border-t border-slate-200 space-y-4">
-            <div className="flex items-baseline justify-between">
-              <div>
-                <span className="text-xs text-slate-500 font-semibold">Store Special Offer:</span>
-                <div className="text-3xl font-black text-emerald-700 flex items-baseline gap-2.5">
-                  <span>₹{product.price?.toLocaleString('en-IN')}</span>
-                  {product.mrp && (
-                    <span className="text-sm font-semibold text-slate-400 line-through">
-                      ₹{product.mrp?.toLocaleString('en-IN')}
-                    </span>
-                  )}
+                <button
+                  type="button"
+                  onClick={handleAddToCart}
+                  disabled={!inStock}
+                  className="flex-1 bg-slate-900 hover:bg-slate-800 text-white font-black text-sm py-3.5 sm:py-4 rounded-2xl shadow-md flex items-center justify-center gap-2 active:scale-98 transition-all disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
+                >
+                  <ShoppingCart className="w-5 h-5 stroke-[2.5]" />
+                  <span>ADD TO CART</span>
+                </button>
+              </div>
+
+              <a
+                href={whatsappUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="w-full py-1.5 flex items-center justify-center gap-2 text-xs font-bold text-slate-600 hover:text-emerald-700 transition-colors"
+              >
+                <MessageCircle className="w-4 h-4 text-emerald-600" />
+                <span>Have questions? Chat with an Expert on WhatsApp</span>
+              </a>
+            </div>
+
+            {/* STEP 6: Rewards / Coin Earning Banner */}
+            {product.allowCoinRedemption !== false && coinReward > 0 && (
+              <div className="bg-amber-500/10 border border-amber-300/80 rounded-2xl p-3.5 flex items-center justify-between gap-3 text-xs">
+                <div className="flex items-center gap-2.5">
+                  <div className="w-8 h-8 rounded-xl bg-amber-500 text-white flex items-center justify-center text-base font-black shrink-0 shadow-xs">
+                    🪙
+                  </div>
+                  <div>
+                    <div className="font-black text-amber-950">Earn up to {coinReward} RC Coins on this order</div>
+                    <div className="text-[11px] font-semibold text-amber-800/80">Redeem coins for instant discounts on future scale parts & upgrades</div>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* STEP 7: Detailed Description, Key Specifications, Features & Highlights */}
+            <div className="space-y-4 pt-2 border-t border-slate-200">
+              <p className="text-xs sm:text-sm text-slate-600 leading-relaxed font-medium">
+                {product.description}
+              </p>
+
+              {/* Technical Specifications Table */}
+              <div className="bg-slate-50 border border-slate-200 rounded-2xl p-4 space-y-3 text-xs">
+                <div className="font-extrabold text-emerald-700 uppercase tracking-wider flex items-center gap-1.5">
+                  <Radio className="w-4 h-4 text-emerald-600" /> Technical Specifications
+                </div>
+                <div className="grid grid-cols-2 gap-3 text-slate-800 font-semibold">
+                  <div><span className="text-slate-500 font-normal">Motor System:</span> {product.specs?.motor || 'Brushless/Brushed'}</div>
+                  <div><span className="text-slate-500 font-normal">ESC Unit:</span> {product.specs?.esc || 'Waterproof ESC'}</div>
+                  <div><span className="text-slate-500 font-normal">Radio Transmitter:</span> {product.specs?.radio || '2.4GHz Digital'}</div>
+                  <div><span className="text-slate-500 font-normal">Drivetrain:</span> {product.specs?.drivetrain || '4WD Shaft Drive'}</div>
                 </div>
               </div>
 
-              <span className="text-xs text-amber-900 font-bold bg-amber-50 border border-amber-200 px-3 py-1.5 rounded-xl">
-                🪙 +{product.rcCoins} Coins
-              </span>
+              {/* Included Parts & Box Contents (Collapsible Drawer) */}
+              <div className="bg-slate-50 border border-slate-200 rounded-2xl p-4 space-y-2 text-xs">
+                <button
+                  type="button"
+                  onClick={() => setIsBoxOpen(!isBoxOpen)}
+                  className="w-full font-extrabold text-slate-900 uppercase tracking-wider flex items-center justify-between cursor-pointer select-none"
+                >
+                  <div className="flex items-center gap-1.5">
+                    <Box className="w-4 h-4 text-emerald-600" />
+                    <span>Included Parts & Box Contents ({parsedBoxContents.length} items)</span>
+                  </div>
+                  {isBoxOpen ? <ChevronUp size={16} className="text-slate-400" /> : <ChevronDown size={16} className="text-slate-400" />}
+                </button>
+
+                {isBoxOpen && (
+                  <ul className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-slate-700 font-medium pt-2 border-t border-slate-200/60">
+                    {parsedBoxContents.map((item, idx) => (
+                      <li key={idx} className="flex items-center gap-2">
+                        <Check className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
+                        <span>{item}</span>
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </div>
+
+              {/* Product Specifications (Collapsible Drawer) */}
+              <div className="bg-slate-50 border border-slate-200 rounded-2xl p-4 space-y-2 text-xs">
+                <button
+                  type="button"
+                  onClick={() => setIsSpecsOpen(!isSpecsOpen)}
+                  className="w-full font-extrabold text-slate-900 uppercase tracking-wider flex items-center justify-between cursor-pointer select-none"
+                >
+                  <div className="flex items-center gap-1.5">
+                    <Radio className="w-4 h-4 text-emerald-600" />
+                    <span>⚙️ PRODUCT SPECIFICATIONS ({parsedDetailedSpecs.length})</span>
+                  </div>
+                  {isSpecsOpen ? <ChevronUp size={16} className="text-slate-400" /> : <ChevronDown size={16} className="text-slate-400" />}
+                </button>
+
+                {isSpecsOpen && (
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-slate-700 font-medium pt-2 border-t border-slate-200/60">
+                    {parsedDetailedSpecs.map((item, idx) => (
+                      <div key={idx} className="flex items-start gap-1.5">
+                        <span className="text-slate-400 font-normal shrink-0">{item.label}:</span>
+                        <span className="text-slate-900 font-semibold">{item.value}</span>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
             </div>
 
-            <button
-              onClick={handleAddToCart}
-              className="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-black text-sm py-4 rounded-2xl shadow-xs flex items-center justify-center gap-2 active:scale-98 transition-all"
-            >
-              <ShoppingCart className="w-5 h-5 stroke-[2.5]" />
-              <span>ADD TO CART • ₹{totalPrice.toLocaleString('en-IN')}</span>
-            </button>
-
-            <a
-              href={whatsappUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="w-full py-2 flex items-center justify-center gap-2 text-xs font-bold text-slate-600 hover:text-emerald-700 transition-colors"
-            >
-              <MessageCircle className="w-4 h-4 text-emerald-600" />
-              <span>Have questions? Chat with an Expert on WhatsApp</span>
-            </a>
           </div>
-
         </div>
 
       </div>
