@@ -1,5 +1,6 @@
+import React from 'react';
 import { useStore, DEFAULT_TICKER_ITEMS } from '../context/StoreContext';
-import { ShieldCheck, Video, Rocket, Wrench, CheckCircle2 } from 'lucide-react';
+import { ShieldCheck, Instagram, Rocket, Package, CheckCircle2 } from 'lucide-react';
 
 export const RunningTicker = ({ className = '' }) => {
   const { marqueeTicker } = useStore();
@@ -67,29 +68,30 @@ export const TrustCards = ({ className = '' }) => {
     },
     {
       id: 'tb-2',
-      icon: Video,
-      emoji: '📹',
-      title: 'Live Video Bench Test',
-      subtitle: "Watch your actual car's throttle, steering & differential tested on 1-on-1 WhatsApp video call before sealing.",
-      badge: 'WhatsApp Live Test',
-      glow: 'from-emerald-500/10 via-emerald-500/5 to-transparent'
+      icon: Instagram,
+      emoji: '📸',
+      title: 'Follow @mjrcbase on Instagram',
+      subtitle: 'Watch running videos, live customer deliveries, unboxings, and new arrivals directly on our official page.',
+      badge: 'EXPLORE REELS & MEDIA →',
+      link: 'https://www.instagram.com/mjrcbase',
+      glow: 'from-pink-500/10 via-purple-500/5 to-transparent'
     },
     {
       id: 'tb-3',
       icon: Rocket,
       emoji: '🚀',
-      title: '24H Mysore Air Dispatch',
-      subtitle: 'Direct dispatch from our Mysore hobby facility with priority air tracking & shockproof wooden casing.',
-      badge: 'Mysore Express Hub',
+      title: 'Express Shiprocket Logistics',
+      subtitle: 'Priority domestic surface and express dispatch via Shiprocket with real-time tracking from Mysore hub.',
+      badge: 'TRACKED DISPATCH',
       glow: 'from-teal-500/10 via-emerald-500/5 to-transparent'
     },
     {
       id: 'tb-4',
-      icon: Wrench,
-      emoji: '⚙️',
-      title: 'Guaranteed Spare Parts',
-      subtitle: 'Full inventory of replacement gears, motors, shocks & batteries so your car never sits idle.',
-      badge: 'Lifetime Support',
+      icon: Package,
+      emoji: '📦',
+      title: 'Original Box Spares Included',
+      subtitle: 'Every kit ships strictly with complete factory-included standard parts, controller, charger, and tools as listed in box contents.',
+      badge: 'FACTORY IN-BOX ITEMS',
       glow: 'from-emerald-500/10 via-slate-500/5 to-transparent'
     }
   ];
@@ -120,11 +122,18 @@ export const TrustCards = ({ className = '' }) => {
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-2.5 sm:gap-5">
           {cards.map((card) => {
             const Icon = card.icon;
+            const CardTag = card.link ? 'a' : 'div';
+            const linkProps = card.link ? {
+              href: card.link,
+              target: '_blank',
+              rel: 'noopener noreferrer'
+            } : {};
 
             return (
-              <div
+              <CardTag
                 key={card.id}
-                className="group relative bg-white backdrop-blur-md border border-slate-200/80 hover:border-emerald-500/50 p-3 sm:p-6 rounded-2xl sm:rounded-3xl transition-all duration-300 hover:scale-105 shadow-xs hover:shadow-md flex flex-col justify-between overflow-hidden"
+                {...linkProps}
+                className="group relative bg-white backdrop-blur-md border border-slate-200/80 hover:border-emerald-500/50 p-3 sm:p-6 rounded-2xl sm:rounded-3xl transition-all duration-300 hover:scale-105 shadow-xs hover:shadow-md flex flex-col justify-between overflow-hidden cursor-pointer"
               >
                 {/* Dynamic Ambient Corner Gradient Reflection */}
                 <div className={`absolute -top-12 -right-12 w-28 h-28 bg-gradient-to-br ${card.glow} rounded-full blur-xl group-hover:scale-150 transition-transform duration-500 pointer-events-none`} />
@@ -157,7 +166,7 @@ export const TrustCards = ({ className = '' }) => {
                     Verified →
                   </span>
                 </div>
-              </div>
+              </CardTag>
             );
           })}
         </div>
