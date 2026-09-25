@@ -169,12 +169,33 @@ export const ProductDetailPage = () => {
     }
   }, [show3d, showVideo, activeMediaType]);
 
-  // Scroll to top whenever product id changes
+  const hasColorVariants = Boolean(product?.hasColors !== false && Array.isArray(product?.availableColors) && product.availableColors.length > 0);
+  const colorList = useMemo(() => (hasColorVariants ? product.availableColors : []), [hasColorVariants, product]);
+  const [selectedColor, setSelectedColor] = useState('');
+
   useEffect(() => {
-    window.scrollTo(0, 0);
-    setActiveMediaType('image');
-    setActiveImageIndex(0);
-  }, [productId]);
+    if (hasColorVariants && colorList.length > 0) {
+      setSelectedColor(colorList[0]);
+    } else {
+      setSelectedColor('');
+    }
+  }, [product, hasColorVariants, colorList]);
+
+  const discountPercent = useMemo(() => {
+    if (!product) return 0;
+    if (product.discount && product.discount > 0) return Number(product.discount);
+    if (product.mrp && product.price && product.mrp > product.price) {
+      return Math.round(((product.mrp - product.price) / product.mrp) * 100);
+    }
+    return 0;
+  }, [product]);
+
+  const coinReward = useMemo(() => {
+    if (!product) return 0;
+    if (product.rcCoins) return product.rcCoins;
+    if (product.coins) return product.coins;
+    return Math.floor((product.price || 0) * 0.05);
+  }, [product]);
 
   if (!product) {
     return (
@@ -208,18 +229,6 @@ export const ProductDetailPage = () => {
     ? siblingCategoryProducts
     : [...siblingCategoryProducts, ...(products || []).filter(item => item && item.id !== product.id && !siblingCategoryProducts.some(sp => sp.id === item.id))].slice(0, 4);
 
-  const hasColorVariants = Boolean(product?.hasColors !== false && Array.isArray(product?.availableColors) && product.availableColors.length > 0);
-  const colorList = useMemo(() => (hasColorVariants ? product.availableColors : []), [hasColorVariants, product]);
-  const [selectedColor, setSelectedColor] = useState('');
-
-  useEffect(() => {
-    if (hasColorVariants && colorList.length > 0) {
-      setSelectedColor(colorList[0]);
-    } else {
-      setSelectedColor('');
-    }
-  }, [product, hasColorVariants, colorList]);
-
   const totalPrice = product.price || 0;
 
   const handleAddToCart = () => {
@@ -231,22 +240,6 @@ export const ProductDetailPage = () => {
     addToCart(product, [], selectedColor);
     setIsCheckoutOpen(true);
   };
-
-  const discountPercent = useMemo(() => {
-    if (!product) return 0;
-    if (product.discount && product.discount > 0) return Number(product.discount);
-    if (product.mrp && product.price && product.mrp > product.price) {
-      return Math.round(((product.mrp - product.price) / product.mrp) * 100);
-    }
-    return 0;
-  }, [product]);
-
-  const coinReward = useMemo(() => {
-    if (!product) return 0;
-    if (product.rcCoins) return product.rcCoins;
-    if (product.coins) return product.coins;
-    return Math.floor((product.price || 0) * 0.05);
-  }, [product]);
 
   const inStock = product ? (product.stock === undefined || product.stock > 0 || product.inStock !== false) : true;
 
