@@ -11,6 +11,8 @@ export const ProductCard = ({ product, onMoveToCart, showMoveToCart = false }) =
 
   const productId = product.id;
   const isWishlisted = (wishlist || []).some(item => (typeof item === 'object' && item !== null ? item.id : item) === productId);
+  const stockCount = Number(product.stockCount ?? product.stock ?? product.remainingUnits ?? (product.inStock === false ? 0 : 10));
+  const isOutOfStock = product.inStock === false || stockCount <= 0;
 
   const handleClick = () => {
     navigate(`/product/${productId}`);
@@ -119,7 +121,7 @@ export const ProductCard = ({ product, onMoveToCart, showMoveToCart = false }) =
 
         {/* Price & Action Button */}
         <div className="pt-2 border-t border-slate-100 space-y-2">
-          <div className="flex items-baseline justify-between">
+          <div className="flex items-baseline justify-between gap-1 flex-wrap">
             <div className="text-sm sm:text-base font-black text-emerald-700 flex items-baseline gap-1.5">
               <span>₹{product.price?.toLocaleString('en-IN')}</span>
               {product.mrp && (
@@ -128,17 +130,31 @@ export const ProductCard = ({ product, onMoveToCart, showMoveToCart = false }) =
                 </span>
               )}
             </div>
+            {isOutOfStock ? (
+              <span className="text-[9px] font-extrabold text-rose-600 bg-rose-50 border border-rose-200 px-1.5 py-0.5 rounded">
+                🔴 SOLD OUT
+              </span>
+            ) : (
+              <span className="text-[9px] font-extrabold text-emerald-700 bg-emerald-50 border border-emerald-200 px-1.5 py-0.5 rounded">
+                🟢 {stockCount} left
+              </span>
+            )}
           </div>
 
           {showMoveToCart ? (
             <button
               onClick={(e) => {
                 e.stopPropagation();
-                if (onMoveToCart) onMoveToCart(product);
+                if (!isOutOfStock && onMoveToCart) onMoveToCart(product);
               }}
-              className="w-full h-7 sm:h-9 text-xs font-extrabold bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg sm:rounded-xl flex items-center justify-center gap-1.5 shadow-xs transition-all cursor-pointer active:scale-95"
+              disabled={isOutOfStock}
+              className={`w-full h-7 sm:h-9 text-xs font-extrabold rounded-lg sm:rounded-xl flex items-center justify-center gap-1.5 shadow-xs transition-all ${
+                isOutOfStock
+                  ? 'bg-slate-400 opacity-50 cursor-not-allowed text-white'
+                  : 'bg-emerald-600 hover:bg-emerald-700 text-white cursor-pointer active:scale-95'
+              }`}
             >
-              <span>Move to Cart</span>
+              <span>{isOutOfStock ? 'Out of Stock' : 'Move to Cart'}</span>
             </button>
           ) : (
             <button

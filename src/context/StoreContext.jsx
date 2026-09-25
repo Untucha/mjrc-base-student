@@ -2144,6 +2144,50 @@ export const StoreProvider = ({ children }) => {
       console.error('[Firestore] placeOrder write error:', err);
     });
 
+    // Automatic Inventory Stock Deduction & Out-of-Stock auto handling
+    (newOrder.items || []).forEach(async (item) => {
+      const prodId = item.id || item.productId;
+      const purchasedQty = Number(item.qty || item.quantity || 1);
+      if (prodId && db) {
+        try {
+          const prodRef = doc(db, 'products', String(prodId));
+          const prodSnap = await getDoc(prodRef);
+          if (prodSnap.exists()) {
+            const currentData = prodSnap.data();
+            const currentStock = Number(currentData.stockCount ?? currentData.stock ?? currentData.remainingUnits ?? 10);
+            const newStock = Math.max(0, currentStock - purchasedQty);
+            const patch = {
+              stockCount: newStock,
+              stock: newStock,
+              remainingUnits: newStock,
+              inStock: newStock > 0
+            };
+            await updateDoc(prodRef, patch).catch(() => setDoc(prodRef, patch, { merge: true }));
+          }
+        } catch (e) {
+          console.error('[Firestore] Stock deduction error for product:', prodId, e);
+        }
+      }
+    });
+
+    // Update local products state for real-time storefront response
+    setProducts(prev => (prev || []).map(p => {
+      const matched = (newOrder.items || []).find(item => String(item.id || item.productId) === String(p.id));
+      if (matched) {
+        const purchasedQty = Number(matched.qty || matched.quantity || 1);
+        const currentStock = Number(p.stockCount ?? p.stock ?? p.remainingUnits ?? 10);
+        const newStock = Math.max(0, currentStock - purchasedQty);
+        return {
+          ...p,
+          stockCount: newStock,
+          stock: newStock,
+          remainingUnits: newStock,
+          inStock: newStock > 0
+        };
+      }
+      return p;
+    }));
+
     clearCart();
 
     showToast(`Order #${newOrderId} Placed! Earned +${earnedCoins} RC Coins!`);

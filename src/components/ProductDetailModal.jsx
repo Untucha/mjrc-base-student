@@ -195,7 +195,8 @@ export const ProductDetailModal = () => {
     return Math.floor((product.price || 0) * 0.05);
   }, [product]);
 
-  const inStock = product ? (product.stock === undefined || product.stock > 0 || product.inStock !== false) : true;
+  const stockCount = product ? Number(product.stockCount ?? product.stock ?? product.remainingUnits ?? (product.inStock === false ? 0 : 10)) : 0;
+  const inStock = product ? (stockCount > 0 && product.inStock !== false) : false;
 
   const whatsappUrl = `https://wa.me/919686078395?text=${encodeURIComponent(
     `Hi MJ RC BASE Expert, I am interested in buying the ${product.title} (₹${totalPrice.toLocaleString('en-IN')}). Can you assist with dispatch details?`
@@ -436,7 +437,7 @@ export const ProductDetailModal = () => {
                     inStock ? 'bg-emerald-50 text-emerald-800 border-emerald-200' : 'bg-rose-50 text-rose-800 border-rose-200'
                   }`}>
                     <span className={`w-1.5 h-1.5 rounded-full ${inStock ? 'bg-emerald-500 animate-pulse' : 'bg-rose-500'}`} />
-                    {inStock ? 'In Stock • Mysore Express' : 'Out of Stock'}
+                    {inStock ? `🟢 In Stock: Only ${stockCount} left` : '🔴 OUT OF STOCK / SOLD OUT'}
                   </span>
                 </div>
 
@@ -446,20 +447,28 @@ export const ProductDetailModal = () => {
                     type="button"
                     onClick={handleBuyNow}
                     disabled={!inStock}
-                    className="flex-1 bg-red-600 hover:bg-red-700 text-white font-black text-xs sm:text-sm py-3 px-4 rounded-xl shadow-md shadow-red-600/20 flex items-center justify-center gap-2 active:scale-98 transition-all disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
+                    className={`flex-1 font-black text-xs sm:text-sm py-3 px-4 rounded-xl shadow-md flex items-center justify-center gap-2 transition-all disabled:opacity-50 disabled:cursor-not-allowed ${
+                      inStock
+                        ? 'bg-red-600 hover:bg-red-700 text-white cursor-pointer active:scale-98 shadow-red-600/20'
+                        : 'bg-slate-400 text-white cursor-not-allowed'
+                    }`}
                   >
                     <Zap className="w-4 h-4 fill-white stroke-none" />
-                    <span>BUY NOW • ₹{totalPrice.toLocaleString('en-IN')}</span>
+                    <span>{inStock ? `BUY NOW • ₹${totalPrice.toLocaleString('en-IN')}` : 'SOLD OUT'}</span>
                   </button>
 
                   <button
                     type="button"
                     onClick={handleAddToCart}
                     disabled={!inStock}
-                    className="flex-1 bg-[#10b981] hover:bg-[#059669] text-white font-black text-xs sm:text-sm py-3 px-4 rounded-xl shadow-lg shadow-emerald-500/20 flex items-center justify-center gap-2 active:scale-95 transition-all text-base disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
+                    className={`flex-1 font-black text-xs sm:text-sm py-3 px-4 rounded-xl shadow-lg flex items-center justify-center gap-2 transition-all disabled:opacity-50 disabled:cursor-not-allowed ${
+                      inStock
+                        ? 'bg-[#10b981] hover:bg-[#059669] text-white cursor-pointer active:scale-95 shadow-emerald-500/20'
+                        : 'bg-slate-400 text-white cursor-not-allowed'
+                    }`}
                   >
                     <ShoppingCart className="w-4 h-4 stroke-[2.5]" />
-                    <span>ADD TO CART • ₹{totalPrice.toLocaleString('en-IN')}</span>
+                    <span>{inStock ? `ADD TO CART • ₹${totalPrice.toLocaleString('en-IN')}` : 'OUT OF STOCK'}</span>
                   </button>
                 </div>
 
