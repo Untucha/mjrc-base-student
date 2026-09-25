@@ -262,8 +262,8 @@ export const ProductDetailPage = () => {
       {/* Main Showcase Layout */}
       <div className="bg-white border border-slate-200/80 rounded-3xl p-6 sm:p-8 lg:p-10 shadow-xs grid grid-cols-1 lg:grid-cols-12 gap-8">
         
-        {/* Left Column: Image & Media Controls (STEP 1) */}
-        <div className="lg:col-span-6 space-y-4">
+        {/* Left Column: Image & Media Controls (Sticky on Desktop) */}
+        <div className="lg:col-span-6 space-y-4 lg:sticky lg:top-24 lg:self-start">
           
           {/* Top Interactive Media Tabs */}
           <div className="flex items-center gap-2 p-1.5 bg-slate-100 rounded-2xl border border-slate-200 text-xs font-black">
@@ -447,6 +447,36 @@ export const ProductDetailPage = () => {
               </h1>
             </div>
 
+            {/* DESKTOP ONLY: 5 Quick Spec Badges (Right after Title, before Price Block) */}
+            <div className="hidden lg:block space-y-3">
+              <div className="grid grid-cols-3 gap-3 text-center text-xs">
+                <div className="bg-slate-50 border border-slate-200 p-3 rounded-xl">
+                  <Gauge className="w-4 h-4 text-emerald-600 mx-auto mb-1" />
+                  <div className="text-[10px] text-slate-500 font-medium">Top Speed</div>
+                  <div className="font-extrabold text-slate-900 text-xs">{product.specs?.topSpeed || '60+ km/h'}</div>
+                </div>
+                <div className="bg-slate-50 border border-slate-200 p-3 rounded-xl">
+                  <Cpu className="w-4 h-4 text-emerald-600 mx-auto mb-1" />
+                  <div className="text-[10px] text-slate-500 font-medium">Drivetrain</div>
+                  <div className="font-extrabold text-slate-900 text-xs">{product.specs?.drivetrain || '4WD Shaft'}</div>
+                </div>
+                <div className="bg-slate-50 border border-slate-200 p-3 rounded-xl">
+                  <BatteryCharging className="w-4 h-4 text-emerald-600 mx-auto mb-1" />
+                  <div className="text-[10px] text-slate-500 font-medium">Battery</div>
+                  <div className="font-extrabold text-slate-900 text-xs">{product.specs?.battery || '3S LiPo'}</div>
+                </div>
+              </div>
+
+              <div className="bg-slate-50 border border-slate-200 rounded-2xl p-4 flex items-center justify-around text-xs text-slate-700 font-semibold">
+                <span className="flex items-center gap-1.5">
+                  <Truck className="w-4 h-4 text-emerald-600" /> 24h Mysore Express Dispatch
+                </span>
+                <span className="flex items-center gap-1.5">
+                  <ShieldCheck className="w-4 h-4 text-emerald-600" /> 100% Genuine Scale Model
+                </span>
+              </div>
+            </div>
+
             {/* STEP 3: PRICE BLOCK */}
             <div className="bg-slate-50 border border-slate-200/80 rounded-2xl p-4 space-y-2">
               <div className="flex items-baseline justify-between flex-wrap gap-2">
@@ -563,33 +593,34 @@ export const ProductDetailPage = () => {
               </a>
             </div>
 
-            {/* Micro Feature Chips */}
-            <div className="grid grid-cols-3 gap-3 text-center text-xs">
-              <div className="bg-slate-50 border border-slate-200 p-3 rounded-xl">
-                <Gauge className="w-4 h-4 text-emerald-600 mx-auto mb-1" />
-                <div className="text-[10px] text-slate-500 font-medium">Top Speed</div>
-                <div className="font-extrabold text-slate-900 text-xs">{product.specs?.topSpeed || '60+ km/h'}</div>
+            {/* MOBILE ONLY: 5 Quick Spec Badges (Placed directly below ADD TO CART button container) */}
+            <div className="block lg:hidden space-y-3">
+              <div className="grid grid-cols-3 gap-3 text-center text-xs">
+                <div className="bg-slate-50 border border-slate-200 p-3 rounded-xl">
+                  <Gauge className="w-4 h-4 text-emerald-600 mx-auto mb-1" />
+                  <div className="text-[10px] text-slate-500 font-medium">Top Speed</div>
+                  <div className="font-extrabold text-slate-900 text-xs">{product.specs?.topSpeed || '60+ km/h'}</div>
+                </div>
+                <div className="bg-slate-50 border border-slate-200 p-3 rounded-xl">
+                  <Cpu className="w-4 h-4 text-emerald-600 mx-auto mb-1" />
+                  <div className="text-[10px] text-slate-500 font-medium">Drivetrain</div>
+                  <div className="font-extrabold text-slate-900 text-xs">{product.specs?.drivetrain || '4WD Shaft'}</div>
+                </div>
+                <div className="bg-slate-50 border border-slate-200 p-3 rounded-xl">
+                  <BatteryCharging className="w-4 h-4 text-emerald-600 mx-auto mb-1" />
+                  <div className="text-[10px] text-slate-500 font-medium">Battery</div>
+                  <div className="font-extrabold text-slate-900 text-xs">{product.specs?.battery || '3S LiPo'}</div>
+                </div>
               </div>
-              <div className="bg-slate-50 border border-slate-200 p-3 rounded-xl">
-                <Cpu className="w-4 h-4 text-emerald-600 mx-auto mb-1" />
-                <div className="text-[10px] text-slate-500 font-medium">Drivetrain</div>
-                <div className="font-extrabold text-slate-900 text-xs">{product.specs?.drivetrain || '4WD Shaft'}</div>
-              </div>
-              <div className="bg-slate-50 border border-slate-200 p-3 rounded-xl">
-                <BatteryCharging className="w-4 h-4 text-emerald-600 mx-auto mb-1" />
-                <div className="text-[10px] text-slate-500 font-medium">Battery</div>
-                <div className="font-extrabold text-slate-900 text-xs">{product.specs?.battery || '3S LiPo'}</div>
-              </div>
-            </div>
 
-            {/* Dispatch Guarantee Box */}
-            <div className="bg-slate-50 border border-slate-200 rounded-2xl p-4 flex items-center justify-around text-xs text-slate-700 font-semibold">
-              <span className="flex items-center gap-1.5">
-                <Truck className="w-4 h-4 text-emerald-600" /> 24h Mysore Express Dispatch
-              </span>
-              <span className="flex items-center gap-1.5">
-                <ShieldCheck className="w-4 h-4 text-emerald-600" /> 100% Genuine Scale Model
-              </span>
+              <div className="bg-slate-50 border border-slate-200 rounded-2xl p-4 flex items-center justify-around text-xs text-slate-700 font-semibold">
+                <span className="flex items-center gap-1.5">
+                  <Truck className="w-4 h-4 text-emerald-600" /> 24h Mysore Express Dispatch
+                </span>
+                <span className="flex items-center gap-1.5">
+                  <ShieldCheck className="w-4 h-4 text-emerald-600" /> 100% Genuine Scale Model
+                </span>
+              </div>
             </div>
 
             {/* STEP 6: Rewards / Coin Earning Banner */}
