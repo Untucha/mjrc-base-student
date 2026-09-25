@@ -415,34 +415,6 @@ export const ProductDetailPage = () => {
 
           </div>
 
-          {/* Micro Feature Chips */}
-          <div className="grid grid-cols-3 gap-3 text-center text-xs">
-            <div className="bg-slate-50 border border-slate-200 p-3 rounded-xl">
-              <Gauge className="w-4 h-4 text-emerald-600 mx-auto mb-1" />
-              <div className="text-[10px] text-slate-500 font-medium">Top Speed</div>
-              <div className="font-extrabold text-slate-900 text-xs">{product.specs?.topSpeed || '60+ km/h'}</div>
-            </div>
-            <div className="bg-slate-50 border border-slate-200 p-3 rounded-xl">
-              <Cpu className="w-4 h-4 text-emerald-600 mx-auto mb-1" />
-              <div className="text-[10px] text-slate-500 font-medium">Drivetrain</div>
-              <div className="font-extrabold text-slate-900 text-xs">{product.specs?.drivetrain || '4WD Shaft'}</div>
-            </div>
-            <div className="bg-slate-50 border border-slate-200 p-3 rounded-xl">
-              <BatteryCharging className="w-4 h-4 text-emerald-600 mx-auto mb-1" />
-              <div className="text-[10px] text-slate-500 font-medium">Battery</div>
-              <div className="font-extrabold text-slate-900 text-xs">{product.specs?.battery || '3S LiPo'}</div>
-            </div>
-          </div>
-
-          {/* Dispatch Guarantee Box */}
-          <div className="bg-slate-50 border border-slate-200 rounded-2xl p-4 flex items-center justify-around text-xs text-slate-700 font-semibold">
-            <span className="flex items-center gap-1.5">
-              <Truck className="w-4 h-4 text-emerald-600" /> 24h Mysore Express Dispatch
-            </span>
-            <span className="flex items-center gap-1.5">
-              <ShieldCheck className="w-4 h-4 text-emerald-600" /> 100% Genuine Scale Model
-            </span>
-          </div>
         </div>
 
         {/* Right Column: Title, Price, Buy Buttons, Colors, Coins & Specs */}
@@ -589,6 +561,35 @@ export const ProductDetailPage = () => {
                 <MessageCircle className="w-4 h-4 text-emerald-600" />
                 <span>Have questions? Chat with an Expert on WhatsApp</span>
               </a>
+            </div>
+
+            {/* Micro Feature Chips */}
+            <div className="grid grid-cols-3 gap-3 text-center text-xs">
+              <div className="bg-slate-50 border border-slate-200 p-3 rounded-xl">
+                <Gauge className="w-4 h-4 text-emerald-600 mx-auto mb-1" />
+                <div className="text-[10px] text-slate-500 font-medium">Top Speed</div>
+                <div className="font-extrabold text-slate-900 text-xs">{product.specs?.topSpeed || '60+ km/h'}</div>
+              </div>
+              <div className="bg-slate-50 border border-slate-200 p-3 rounded-xl">
+                <Cpu className="w-4 h-4 text-emerald-600 mx-auto mb-1" />
+                <div className="text-[10px] text-slate-500 font-medium">Drivetrain</div>
+                <div className="font-extrabold text-slate-900 text-xs">{product.specs?.drivetrain || '4WD Shaft'}</div>
+              </div>
+              <div className="bg-slate-50 border border-slate-200 p-3 rounded-xl">
+                <BatteryCharging className="w-4 h-4 text-emerald-600 mx-auto mb-1" />
+                <div className="text-[10px] text-slate-500 font-medium">Battery</div>
+                <div className="font-extrabold text-slate-900 text-xs">{product.specs?.battery || '3S LiPo'}</div>
+              </div>
+            </div>
+
+            {/* Dispatch Guarantee Box */}
+            <div className="bg-slate-50 border border-slate-200 rounded-2xl p-4 flex items-center justify-around text-xs text-slate-700 font-semibold">
+              <span className="flex items-center gap-1.5">
+                <Truck className="w-4 h-4 text-emerald-600" /> 24h Mysore Express Dispatch
+              </span>
+              <span className="flex items-center gap-1.5">
+                <ShieldCheck className="w-4 h-4 text-emerald-600" /> 100% Genuine Scale Model
+              </span>
             </div>
 
             {/* STEP 6: Rewards / Coin Earning Banner */}
