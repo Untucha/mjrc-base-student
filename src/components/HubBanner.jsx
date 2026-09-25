@@ -1,7 +1,20 @@
 import React from 'react';
-import { MapPin, ShieldCheck, Play, Award, Truck } from 'lucide-react';
+import { MapPin, ShieldCheck, Play } from 'lucide-react';
+import { useStore } from '../context/StoreContext';
 
 export const HubBanner = () => {
+  const { showToast } = useStore();
+
+  const toast = {
+    info: (msg) => {
+      if (showToast) showToast(msg);
+    }
+  };
+
+  const handleWatchTour = () => {
+    toast.info("Official Mysore Store Video Tour launching soon! 🎬");
+  };
+
   return (
     <section className="py-4 sm:py-6 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto my-3 sm:my-8">
       <div className="bg-gradient-to-r from-slate-900 via-emerald-950 to-slate-900 border border-slate-800 rounded-2xl sm:rounded-3xl p-3.5 sm:p-8 text-white shadow-xl overflow-x-hidden">
@@ -19,27 +32,44 @@ export const HubBanner = () => {
             </h2>
 
             <div className="grid grid-cols-2 gap-2 sm:gap-3 pt-1 text-[11px] sm:text-xs font-semibold text-slate-300">
-              <div className="flex items-start gap-1.5 sm:gap-2 bg-slate-800/60 p-2 sm:p-3 rounded-xl sm:rounded-2xl border border-slate-700/60">
-                <MapPin className="w-3.5 h-3.5 sm:w-5 sm:h-5 text-emerald-400 shrink-0 mt-0.5" />
+              
+              {/* CARD 1: Mysore Store Google Maps Link */}
+              <a
+                href="https://share.google/yMcIPsS2RbNqzKMH3"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-start gap-1.5 sm:gap-2 bg-slate-800/60 hover:bg-slate-800 p-2 sm:p-3 rounded-xl sm:rounded-2xl border border-slate-700/60 hover:border-emerald-500/50 transition-all group cursor-pointer"
+              >
+                <MapPin className="w-3.5 h-3.5 sm:w-5 sm:h-5 text-emerald-400 shrink-0 mt-0.5 group-hover:scale-110 transition-transform" />
                 <div>
-                  <span className="font-extrabold text-white block text-[11px] sm:text-xs">📍 Mysore Store</span>
-                  Direct bench-testing & hobby trials.
+                  <span className="font-extrabold text-white block text-[11px] sm:text-xs group-hover:text-emerald-300 transition-colors">📍 Mysore Store</span>
+                  <span className="text-slate-300">Direct bench-testing & hobby trials.</span>
                 </div>
-              </div>
+              </a>
 
-              <div className="flex items-start gap-1.5 sm:gap-2 bg-slate-800/60 p-2 sm:p-3 rounded-xl sm:rounded-2xl border border-slate-700/60">
-                <ShieldCheck className="w-3.5 h-3.5 sm:w-5 sm:h-5 text-emerald-400 shrink-0 mt-0.5" />
+              {/* CARD 2: Expert Support WhatsApp Chat Link */}
+              <a
+                href="https://wa.me/919686078395?text=Hi%20MJ%20RC%20BASE%20Team,%20I%20need%20expert%20assistance%20with%20RC%20models%20and%20spares!"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-start gap-1.5 sm:gap-2 bg-slate-800/60 hover:bg-slate-800 p-2 sm:p-3 rounded-xl sm:rounded-2xl border border-slate-700/60 hover:border-emerald-500/50 transition-all group cursor-pointer"
+              >
+                <ShieldCheck className="w-3.5 h-3.5 sm:w-5 sm:h-5 text-emerald-400 shrink-0 mt-0.5 group-hover:scale-110 transition-transform" />
                 <div>
-                  <span className="font-extrabold text-white block text-[11px] sm:text-xs">🛡️ Expert Support</span>
-                  Setup assistance & genuine spares.
+                  <span className="font-extrabold text-white block text-[11px] sm:text-xs group-hover:text-emerald-300 transition-colors">🛡️ Expert Support</span>
+                  <span className="text-slate-300">Setup assistance & genuine spares.</span>
                 </div>
-              </div>
+              </a>
+
             </div>
           </div>
 
-          {/* Right Video Card */}
+          {/* Right Video Card (CARD 3: Watch Store Tour) */}
           <div className="lg:col-span-4 flex justify-center">
-            <div className="relative w-full max-w-sm h-36 sm:h-44 rounded-xl sm:rounded-2xl overflow-hidden border border-slate-700/80 group cursor-pointer shadow-lg bg-slate-950">
+            <div
+              onClick={handleWatchTour}
+              className="relative w-full max-w-sm h-36 sm:h-44 rounded-xl sm:rounded-2xl overflow-hidden border border-slate-700/80 group cursor-pointer shadow-lg bg-slate-950"
+            >
               <img
                 src="https://images.unsplash.com/photo-1594787318286-3d835c1d207f?auto=format&fit=crop&w=600&q=80"
                 alt="Mysore RC Experience Hub Tour"
