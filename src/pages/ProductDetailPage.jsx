@@ -21,7 +21,8 @@ import {
   Heart,
   Star,
   ChevronDown,
-  ChevronUp
+  ChevronUp,
+  Flame
 } from 'lucide-react';
 
 export const ProductDetailPage = () => {
@@ -627,37 +628,50 @@ export const ProductDetailPage = () => {
               </div>
             )}
 
-            {/* STEP 5: Primary Action Buttons ("BUY NOW" and "ADD TO CART") */}
+            {/* STEP 5: Primary Action Buttons ("BUY NOW" and "ADD TO CART") OR Restock Hype Card */}
             <div className="space-y-3 pt-1">
-              <div className="flex flex-col sm:flex-row gap-3">
-                <button
-                  type="button"
-                  onClick={handleBuyNow}
-                  disabled={!inStock}
-                  className={`flex-1 font-black text-sm py-3.5 sm:py-4 rounded-2xl shadow-md flex items-center justify-center gap-2 transition-all disabled:opacity-50 disabled:cursor-not-allowed ${
-                    inStock
-                      ? 'bg-red-600 hover:bg-red-700 text-white cursor-pointer active:scale-98 shadow-red-600/20'
-                      : 'bg-slate-400 text-white cursor-not-allowed'
-                  }`}
-                >
-                  <Zap className="w-5 h-5 fill-white stroke-none" />
-                  <span>{inStock ? `BUY NOW • ₹${totalPrice.toLocaleString('en-IN')}` : 'SOLD OUT'}</span>
-                </button>
+              {!inStock || stockCount <= 0 ? (
+                <div className="w-full bg-gradient-to-r from-amber-50 to-orange-50 border border-orange-200 rounded-2xl p-4 md:p-5 text-center space-y-3">
+                  <div className="flex items-center justify-center gap-2 text-orange-600 font-bold text-sm md:text-base">
+                    <Flame className="w-5 h-5 text-orange-500 animate-pulse"/>
+                    <span>Currently Out of Stock in Mysore Hub</span>
+                  </div>
+                  <p className="text-xs md:text-sm text-slate-600 max-w-md mx-auto">
+                    Want this machine? Hype it up! Click below to notify us via WhatsApp. When enough racers request this model, we restock it on priority and ping you first!
+                  </p>
+                  <a
+                    href={`https://wa.me/919686078395?text=${encodeURIComponent(
+                      `Hi MJ RC BASE! 🔥 I want to HYPE this out-of-stock model: "${product.title}" (Color: ${selectedColor || "Standard"}). Please notify me as soon as new stock arrives in Mysore Hub!`
+                    )}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center justify-center gap-2 w-full py-3.5 px-6 bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 text-white font-black text-sm md:text-base rounded-xl shadow-lg shadow-orange-500/25 active:scale-95 transition-all cursor-pointer"
+                  >
+                    <Flame className="w-5 h-5"/>
+                    <span>HYPE THIS MODEL • NOTIFY ON RESTOCK</span>
+                  </a>
+                </div>
+              ) : (
+                <div className="flex flex-col sm:flex-row gap-3">
+                  <button
+                    type="button"
+                    onClick={handleBuyNow}
+                    className="flex-1 bg-red-600 hover:bg-red-700 text-white font-black text-sm py-3.5 sm:py-4 rounded-2xl shadow-md shadow-red-600/20 flex items-center justify-center gap-2 active:scale-98 transition-all cursor-pointer"
+                  >
+                    <Zap className="w-5 h-5 fill-white stroke-none" />
+                    <span>BUY NOW • ₹{totalPrice.toLocaleString('en-IN')}</span>
+                  </button>
 
-                <button
-                  type="button"
-                  onClick={handleAddToCart}
-                  disabled={!inStock}
-                  className={`flex-1 font-black text-sm py-3.5 sm:py-4 rounded-2xl shadow-md flex items-center justify-center gap-2 transition-all disabled:opacity-50 disabled:cursor-not-allowed ${
-                    inStock
-                      ? 'bg-slate-900 hover:bg-slate-800 text-white cursor-pointer active:scale-98'
-                      : 'bg-slate-400 text-white cursor-not-allowed'
-                  }`}
-                >
-                  <ShoppingCart className="w-5 h-5 stroke-[2.5]" />
-                  <span>{inStock ? 'ADD TO CART' : 'OUT OF STOCK'}</span>
-                </button>
-              </div>
+                  <button
+                    type="button"
+                    onClick={handleAddToCart}
+                    className="flex-1 bg-slate-900 hover:bg-slate-800 text-white font-black text-sm py-3.5 sm:py-4 rounded-2xl shadow-md flex items-center justify-center gap-2 active:scale-98 transition-all cursor-pointer"
+                  >
+                    <ShoppingCart className="w-5 h-5 stroke-[2.5]" />
+                    <span>ADD TO CART</span>
+                  </button>
+                </div>
+              )}
 
               <a
                 href={whatsappUrl}

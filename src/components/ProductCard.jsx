@@ -51,6 +51,15 @@ export const ProductCard = ({ product, onMoveToCart, showMoveToCart = false }) =
     >
       {/* Top Edge-to-Edge Image Viewport */}
       <div className="relative w-full aspect-[4/3] sm:aspect-[16/10] overflow-hidden rounded-t-2xl bg-neutral-100 p-0">
+        {/* SOLD OUT Image Overlay */}
+        {(!product.inStock || stockCount <= 0) && (
+          <div className="absolute inset-0 bg-black/40 backdrop-blur-[1px] flex items-center justify-center rounded-xl pointer-events-none z-10">
+            <span className="bg-red-600/95 text-white font-extrabold tracking-wider px-4 py-1.5 rounded-lg text-xs md:text-sm uppercase shadow-lg border border-red-400/30">
+              SOLD OUT
+            </span>
+          </div>
+        )}
+
         {/* Synchronized BADGE TAG HIGHLIGHT Badge */}
         {renderTopLeftBadge()}
 
@@ -130,11 +139,7 @@ export const ProductCard = ({ product, onMoveToCart, showMoveToCart = false }) =
                 </span>
               )}
             </div>
-            {isOutOfStock ? (
-              <span className="text-[9px] font-extrabold text-rose-600 bg-rose-50 border border-rose-200 px-1.5 py-0.5 rounded">
-                🔴 SOLD OUT
-              </span>
-            ) : (
+            {!isOutOfStock && stockCount > 0 && (
               <span className="text-[9px] font-extrabold text-emerald-700 bg-emerald-50 border border-emerald-200 px-1.5 py-0.5 rounded">
                 🟢 {stockCount} left
               </span>
