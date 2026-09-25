@@ -107,15 +107,18 @@ export const Footer = () => {
                 <Link to="/track" className="hover:text-emerald-400 block transition-colors">
                   Track Your Order
                 </Link>
-                <button type="button" onClick={handleOpenTermsModal} className="hover:text-emerald-400 text-left block transition-colors cursor-pointer">
-                  Bench-Testing & QC Protocol
-                </button>
-                <button type="button" onClick={handleOpenTermsModal} className="hover:text-emerald-400 text-left block transition-colors cursor-pointer">
+                <Link to="/shipping-policy" className="hover:text-emerald-400 block transition-colors">
+                  Shipping & Delivery Policy
+                </Link>
+                <Link to="/replacement-policy" className="hover:text-emerald-400 block transition-colors">
+                  Replacement & Return Policy
+                </Link>
+                <Link to="/terms-and-conditions" className="hover:text-emerald-400 block transition-colors">
                   Terms & Conditions
-                </button>
-                <button type="button" onClick={handleOpenTermsModal} className="hover:text-emerald-400 text-left block transition-colors cursor-pointer">
-                  Replacement & Warranty Policy
-                </button>
+                </Link>
+                <Link to="/privacy-policy" className="hover:text-emerald-400 block transition-colors">
+                  Privacy Policy
+                </Link>
               </div>
             </div>
           </div>
@@ -235,19 +238,24 @@ export const Footer = () => {
                   </Link>
                 </li>
                 <li>
-                  <button type="button" onClick={handleOpenTermsModal} className="hover:text-emerald-400 text-left transition-colors cursor-pointer block">
-                    Bench-Testing & QC Protocol
-                  </button>
+                  <Link to="/shipping-policy" className="hover:text-emerald-400 transition-colors block">
+                    Shipping & Delivery Policy
+                  </Link>
                 </li>
                 <li>
-                  <button type="button" onClick={handleOpenTermsModal} className="hover:text-emerald-400 text-left transition-colors cursor-pointer block">
+                  <Link to="/replacement-policy" className="hover:text-emerald-400 transition-colors block">
+                    Replacement & Return Policy
+                  </Link>
+                </li>
+                <li>
+                  <Link to="/terms-and-conditions" className="hover:text-emerald-400 transition-colors block">
                     Terms & Conditions
-                  </button>
+                  </Link>
                 </li>
                 <li>
-                  <button type="button" onClick={handleOpenTermsModal} className="hover:text-emerald-400 text-left transition-colors cursor-pointer block">
-                    Replacement & Warranty Policy
-                  </button>
+                  <Link to="/privacy-policy" className="hover:text-emerald-400 transition-colors block">
+                    Privacy Policy
+                  </Link>
                 </li>
               </ul>
             </div>

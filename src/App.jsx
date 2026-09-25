@@ -10,6 +10,7 @@ import { CategoryProductPage } from './pages/CategoryProductPage';
 import { ProductDetailPage } from './pages/ProductDetailPage';
 import { BrandPageView } from './pages/BrandPageView';
 import { TrackOrderPage } from './pages/TrackOrderPage';
+import { ShippingPolicyPage, ReplacementPolicyPage, TermsConditionsPage, PrivacyPolicyPage } from './pages/LegalPages';
 import { AdminDashboard } from './pages/AdminDashboard';
 import { PhoneAuthModal } from './components/PhoneAuthModal';
 import { AccountModal } from './components/AccountModal';
@@ -169,6 +170,10 @@ const MainContent = () => {
           <Route path="/product/:productId" element={<ProductDetailPage />} />
           <Route path="/cart" element={<AllProductsPage />} />
           <Route path="/track" element={<TrackOrderPage />} />
+          <Route path="/shipping-policy" element={<ShippingPolicyPage />} />
+          <Route path="/replacement-policy" element={<ReplacementPolicyPage />} />
+          <Route path="/terms-and-conditions" element={<TermsConditionsPage />} />
+          <Route path="/privacy-policy" element={<PrivacyPolicyPage />} />
           <Route path="/admin" element={<AdminDashboard />} />
         </Routes>
       </main>
