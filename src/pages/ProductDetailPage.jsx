@@ -415,6 +415,74 @@ export const ProductDetailPage = () => {
 
           </div>
 
+          {/* DESKTOP ONLY: Technical Specifications & Box Contents (Fills empty left side void on desktop) */}
+          <div className="hidden lg:block space-y-4 pt-4 border-t border-slate-200">
+            {/* Technical Specifications Table */}
+            <div className="bg-slate-50 border border-slate-200 rounded-2xl p-4 space-y-3 text-xs">
+              <div className="font-extrabold text-emerald-700 uppercase tracking-wider flex items-center gap-1.5">
+                <Radio className="w-4 h-4 text-emerald-600" /> Technical Specifications
+              </div>
+              <div className="grid grid-cols-2 gap-3 text-slate-800 font-semibold">
+                <div><span className="text-slate-500 font-normal">Motor System:</span> {product.specs?.motor || 'Brushless/Brushed'}</div>
+                <div><span className="text-slate-500 font-normal">ESC Unit:</span> {product.specs?.esc || 'Waterproof ESC'}</div>
+                <div><span className="text-slate-500 font-normal">Radio Transmitter:</span> {product.specs?.radio || '2.4GHz Digital'}</div>
+                <div><span className="text-slate-500 font-normal">Drivetrain:</span> {product.specs?.drivetrain || '4WD Shaft Drive'}</div>
+              </div>
+            </div>
+
+            {/* Included Parts & Box Contents (Collapsible Drawer) */}
+            <div className="bg-slate-50 border border-slate-200 rounded-2xl p-4 space-y-2 text-xs">
+              <button
+                type="button"
+                onClick={() => setIsBoxOpen(!isBoxOpen)}
+                className="w-full font-extrabold text-slate-900 uppercase tracking-wider flex items-center justify-between cursor-pointer select-none"
+              >
+                <div className="flex items-center gap-1.5">
+                  <Box className="w-4 h-4 text-emerald-600" />
+                  <span>Included Parts & Box Contents ({parsedBoxContents.length} items)</span>
+                </div>
+                {isBoxOpen ? <ChevronUp size={16} className="text-slate-400" /> : <ChevronDown size={16} className="text-slate-400" />}
+              </button>
+
+              {isBoxOpen && (
+                <ul className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-slate-700 font-medium pt-2 border-t border-slate-200/60">
+                  {parsedBoxContents.map((item, idx) => (
+                    <li key={idx} className="flex items-center gap-2">
+                      <Check className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
+                      <span>{item}</span>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
+
+            {/* Product Specifications (Collapsible Drawer) */}
+            <div className="bg-slate-50 border border-slate-200 rounded-2xl p-4 space-y-2 text-xs">
+              <button
+                type="button"
+                onClick={() => setIsSpecsOpen(!isSpecsOpen)}
+                className="w-full font-extrabold text-slate-900 uppercase tracking-wider flex items-center justify-between cursor-pointer select-none"
+              >
+                <div className="flex items-center gap-1.5">
+                  <Radio className="w-4 h-4 text-emerald-600" />
+                  <span>⚙️ PRODUCT SPECIFICATIONS ({parsedDetailedSpecs.length})</span>
+                </div>
+                {isSpecsOpen ? <ChevronUp size={16} className="text-slate-400" /> : <ChevronDown size={16} className="text-slate-400" />}
+              </button>
+
+              {isSpecsOpen && (
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-slate-700 font-medium pt-2 border-t border-slate-200/60">
+                  {parsedDetailedSpecs.map((item, idx) => (
+                    <div key={idx} className="flex items-start gap-1.5">
+                      <span className="text-slate-400 font-normal shrink-0">{item.label}:</span>
+                      <span className="text-slate-900 font-semibold">{item.value}</span>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
+
         </div>
 
         {/* Right Column: Title, Price, Buy Buttons, Colors, Coins & Specs */}
@@ -644,69 +712,72 @@ export const ProductDetailPage = () => {
                 {product.description}
               </p>
 
-              {/* Technical Specifications Table */}
-              <div className="bg-slate-50 border border-slate-200 rounded-2xl p-4 space-y-3 text-xs">
-                <div className="font-extrabold text-emerald-700 uppercase tracking-wider flex items-center gap-1.5">
-                  <Radio className="w-4 h-4 text-emerald-600" /> Technical Specifications
+              {/* MOBILE ONLY: Technical Specifications & Box Contents */}
+              <div className="block lg:hidden space-y-4">
+                {/* Technical Specifications Table */}
+                <div className="bg-slate-50 border border-slate-200 rounded-2xl p-4 space-y-3 text-xs">
+                  <div className="font-extrabold text-emerald-700 uppercase tracking-wider flex items-center gap-1.5">
+                    <Radio className="w-4 h-4 text-emerald-600" /> Technical Specifications
+                  </div>
+                  <div className="grid grid-cols-2 gap-3 text-slate-800 font-semibold">
+                    <div><span className="text-slate-500 font-normal">Motor System:</span> {product.specs?.motor || 'Brushless/Brushed'}</div>
+                    <div><span className="text-slate-500 font-normal">ESC Unit:</span> {product.specs?.esc || 'Waterproof ESC'}</div>
+                    <div><span className="text-slate-500 font-normal">Radio Transmitter:</span> {product.specs?.radio || '2.4GHz Digital'}</div>
+                    <div><span className="text-slate-500 font-normal">Drivetrain:</span> {product.specs?.drivetrain || '4WD Shaft Drive'}</div>
+                  </div>
                 </div>
-                <div className="grid grid-cols-2 gap-3 text-slate-800 font-semibold">
-                  <div><span className="text-slate-500 font-normal">Motor System:</span> {product.specs?.motor || 'Brushless/Brushed'}</div>
-                  <div><span className="text-slate-500 font-normal">ESC Unit:</span> {product.specs?.esc || 'Waterproof ESC'}</div>
-                  <div><span className="text-slate-500 font-normal">Radio Transmitter:</span> {product.specs?.radio || '2.4GHz Digital'}</div>
-                  <div><span className="text-slate-500 font-normal">Drivetrain:</span> {product.specs?.drivetrain || '4WD Shaft Drive'}</div>
+
+                {/* Included Parts & Box Contents (Collapsible Drawer) */}
+                <div className="bg-slate-50 border border-slate-200 rounded-2xl p-4 space-y-2 text-xs">
+                  <button
+                    type="button"
+                    onClick={() => setIsBoxOpen(!isBoxOpen)}
+                    className="w-full font-extrabold text-slate-900 uppercase tracking-wider flex items-center justify-between cursor-pointer select-none"
+                  >
+                    <div className="flex items-center gap-1.5">
+                      <Box className="w-4 h-4 text-emerald-600" />
+                      <span>Included Parts & Box Contents ({parsedBoxContents.length} items)</span>
+                    </div>
+                    {isBoxOpen ? <ChevronUp size={16} className="text-slate-400" /> : <ChevronDown size={16} className="text-slate-400" />}
+                  </button>
+
+                  {isBoxOpen && (
+                    <ul className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-slate-700 font-medium pt-2 border-t border-slate-200/60">
+                      {parsedBoxContents.map((item, idx) => (
+                        <li key={idx} className="flex items-center gap-2">
+                          <Check className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
+                          <span>{item}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  )}
                 </div>
-              </div>
 
-              {/* Included Parts & Box Contents (Collapsible Drawer) */}
-              <div className="bg-slate-50 border border-slate-200 rounded-2xl p-4 space-y-2 text-xs">
-                <button
-                  type="button"
-                  onClick={() => setIsBoxOpen(!isBoxOpen)}
-                  className="w-full font-extrabold text-slate-900 uppercase tracking-wider flex items-center justify-between cursor-pointer select-none"
-                >
-                  <div className="flex items-center gap-1.5">
-                    <Box className="w-4 h-4 text-emerald-600" />
-                    <span>Included Parts & Box Contents ({parsedBoxContents.length} items)</span>
-                  </div>
-                  {isBoxOpen ? <ChevronUp size={16} className="text-slate-400" /> : <ChevronDown size={16} className="text-slate-400" />}
-                </button>
+                {/* Product Specifications (Collapsible Drawer) */}
+                <div className="bg-slate-50 border border-slate-200 rounded-2xl p-4 space-y-2 text-xs">
+                  <button
+                    type="button"
+                    onClick={() => setIsSpecsOpen(!isSpecsOpen)}
+                    className="w-full font-extrabold text-slate-900 uppercase tracking-wider flex items-center justify-between cursor-pointer select-none"
+                  >
+                    <div className="flex items-center gap-1.5">
+                      <Radio className="w-4 h-4 text-emerald-600" />
+                      <span>⚙️ PRODUCT SPECIFICATIONS ({parsedDetailedSpecs.length})</span>
+                    </div>
+                    {isSpecsOpen ? <ChevronUp size={16} className="text-slate-400" /> : <ChevronDown size={16} className="text-slate-400" />}
+                  </button>
 
-                {isBoxOpen && (
-                  <ul className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-slate-700 font-medium pt-2 border-t border-slate-200/60">
-                    {parsedBoxContents.map((item, idx) => (
-                      <li key={idx} className="flex items-center gap-2">
-                        <Check className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
-                        <span>{item}</span>
-                      </li>
-                    ))}
-                  </ul>
-                )}
-              </div>
-
-              {/* Product Specifications (Collapsible Drawer) */}
-              <div className="bg-slate-50 border border-slate-200 rounded-2xl p-4 space-y-2 text-xs">
-                <button
-                  type="button"
-                  onClick={() => setIsSpecsOpen(!isSpecsOpen)}
-                  className="w-full font-extrabold text-slate-900 uppercase tracking-wider flex items-center justify-between cursor-pointer select-none"
-                >
-                  <div className="flex items-center gap-1.5">
-                    <Radio className="w-4 h-4 text-emerald-600" />
-                    <span>⚙️ PRODUCT SPECIFICATIONS ({parsedDetailedSpecs.length})</span>
-                  </div>
-                  {isSpecsOpen ? <ChevronUp size={16} className="text-slate-400" /> : <ChevronDown size={16} className="text-slate-400" />}
-                </button>
-
-                {isSpecsOpen && (
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-slate-700 font-medium pt-2 border-t border-slate-200/60">
-                    {parsedDetailedSpecs.map((item, idx) => (
-                      <div key={idx} className="flex items-start gap-1.5">
-                        <span className="text-slate-400 font-normal shrink-0">{item.label}:</span>
-                        <span className="text-slate-900 font-semibold">{item.value}</span>
-                      </div>
-                    ))}
-                  </div>
-                )}
+                  {isSpecsOpen && (
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-slate-700 font-medium pt-2 border-t border-slate-200/60">
+                      {parsedDetailedSpecs.map((item, idx) => (
+                        <div key={idx} className="flex items-start gap-1.5">
+                          <span className="text-slate-400 font-normal shrink-0">{item.label}:</span>
+                          <span className="text-slate-900 font-semibold">{item.value}</span>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
               </div>
             </div>
 
