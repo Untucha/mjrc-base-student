@@ -5,9 +5,9 @@ import { useStore } from '../context/StoreContext';
 export const CATEGORIES = [
   {
     id: 'rc-crawlers',
-    name: 'RC Crawlers',
+    name: '4x4 Rock Crawlers',
     slug: 'rc-crawlers',
-    label: 'RC Crawlers',
+    label: '4x4 Rock Crawlers',
     image: 'https://images.unsplash.com/photo-1594787318286-3d835c1d207f?auto=format&fit=crop&w=300&q=80',
     icon: '🧗',
     description: 'Extreme 4WD trail & rock crawlers with portal axles and scale specs.',
@@ -16,9 +16,9 @@ export const CATEGORIES = [
   },
   {
     id: 'trail-pickups',
-    name: 'Trail Pickups',
+    name: 'Scale Trail Pickups',
     slug: 'trail-pickups',
-    label: 'Trail Pickups',
+    label: 'Scale Trail Pickups',
     image: 'https://images.unsplash.com/photo-1568605117036-5fe5e7bab0b7?auto=format&fit=crop&w=300&q=80',
     icon: '🛻',
     description: 'Scale 4x4 trail pickups and adventure rigs.',
@@ -27,9 +27,9 @@ export const CATEGORIES = [
   },
   {
     id: 'drift-and-rally',
-    name: 'Drift and Rally',
+    name: 'Drift & Speed Rally',
     slug: 'drift-and-rally',
-    label: 'Drift and Rally',
+    label: 'Drift & Speed Rally',
     image: 'https://images.unsplash.com/photo-1552519507-da3b142c6e3d?auto=format&fit=crop&w=300&q=80',
     icon: '🏎️',
     description: 'Precision drift machines and high-speed rally cars.',
@@ -38,9 +38,9 @@ export const CATEGORIES = [
   },
   {
     id: 'bashers-and-monster',
-    name: 'Bashers and Monster',
+    name: 'Monster Bashers',
     slug: 'bashers-and-monster',
-    label: 'Bashers and Monster',
+    label: 'Monster Bashers',
     image: 'https://images.unsplash.com/photo-1594787318286-3d835c1d207f?auto=format&fit=crop&w=300&q=80',
     icon: '⚡',
     description: 'High-speed bashing monster trucks and stunt vehicles.',
@@ -49,9 +49,9 @@ export const CATEGORIES = [
   },
   {
     id: 'heavy-machinery',
-    name: 'Heavy Machinery',
+    name: 'Scale Heavy Machinery',
     slug: 'heavy-machinery',
-    label: 'Heavy Machinery',
+    label: 'Scale Heavy Machinery',
     image: 'https://images.unsplash.com/photo-1583121274602-3e2820c69888?auto=format&fit=crop&w=300&q=80',
     icon: '🚜',
     description: 'Full hydraulic excavators, heavy dump trucks & loaders.',
@@ -60,9 +60,9 @@ export const CATEGORIES = [
   },
   {
     id: 'short-course',
-    name: 'Short course',
+    name: 'Short Course Trucks',
     slug: 'short-course',
-    label: 'Short course',
+    label: 'Short Course Trucks',
     image: 'https://images.unsplash.com/photo-1544620347-c4fd4a3d5957?auto=format&fit=crop&w=300&q=80',
     icon: '🏁',
     description: 'Off-road short course racing trucks and buggies.',
@@ -70,6 +70,21 @@ export const CATEGORIES = [
     sortOrder: 6
   }
 ];
+
+export const getCategoryDisplayName = (cat) => {
+  if (!cat) return 'Category';
+  const idOrSlug = String(cat.id || cat.slug || '').toLowerCase().trim();
+  const rawName = String(cat.name || cat.label || '').toLowerCase().trim();
+
+  if (idOrSlug === 'rc-crawlers' || rawName === 'rc crawlers' || rawName.includes('rock crawler')) return '4x4 Rock Crawlers';
+  if (idOrSlug === 'trail-pickups' || rawName === 'trail pickups' || rawName.includes('trail pickup')) return 'Scale Trail Pickups';
+  if (idOrSlug === 'drift-and-rally' || rawName === 'drift and rally' || rawName === 'drift & rally' || rawName.includes('drift')) return 'Drift & Speed Rally';
+  if (idOrSlug === 'bashers-and-monster' || rawName === 'bashers and monster' || rawName === 'bashers & monster' || rawName.includes('basher') || rawName.includes('monster')) return 'Monster Bashers';
+  if (idOrSlug === 'heavy-machinery' || rawName === 'heavy machinery' || rawName.includes('heavy machinery')) return 'Scale Heavy Machinery';
+  if (idOrSlug === 'short-course' || rawName === 'short course' || rawName.includes('short course')) return 'Short Course Trucks';
+
+  return cat.name || cat.label || 'Category';
+};
 
 export const CategoryShowcase = () => {
   const { categories = CATEGORIES, categoriesList, selectedCategory, setSelectedCategory } = useStore();
@@ -81,7 +96,8 @@ export const CategoryShowcase = () => {
   const renderCard = (cat, isMobile = false) => {
     if (!cat || typeof cat !== 'object') return null;
     const catName = typeof cat.name === 'string' ? cat.name : (typeof cat.label === 'string' ? cat.label : (cat.name?.name || cat.label?.label || 'Category'));
-    const isSelected = selectedCategory === catName;
+    const displayName = getCategoryDisplayName(cat);
+    const isSelected = selectedCategory === catName || selectedCategory === displayName;
     const slug = (cat.slug || cat.id || catName || '').toLowerCase().trim().replace(/\s+/g, '-');
     const coverImg = cat.imageUrl || cat.image || 'https://images.unsplash.com/photo-1594787318286-3d835c1d207f?auto=format&fit=crop&w=300&q=80';
 
@@ -95,27 +111,27 @@ export const CategoryShowcase = () => {
             sessionStorage.setItem('returnSection', 'shop-by-category');
           }
         }}
-        className={`relative w-full aspect-square rounded-2xl overflow-hidden group cursor-pointer shadow-sm hover:shadow-xl transition-all duration-300 block select-none active:scale-95 touch-manipulation ${
+        className={`group flex flex-col items-center cursor-pointer select-none active:scale-95 touch-manipulation transition-all duration-300 block ${
           isMobile ? 'w-32 sm:w-36 shrink-0 snap-start' : 'w-full'
-        } ${
-          isSelected
-            ? 'ring-4 ring-emerald-500 ring-offset-2'
-            : ''
         }`}
       >
-        {/* Full Bleed Edge-to-Edge Image */}
-        <img
-          src={coverImg}
-          loading="lazy"
-          decoding="async"
-          alt={catName}
-          className="w-full h-full object-cover object-center group-hover:scale-105 transition-transform duration-500 pointer-events-none"
-        />
+        {/* Rounded Image Card Viewport */}
+        <div className={`relative w-full aspect-square rounded-2xl overflow-hidden shadow-xs hover:shadow-md transition-all duration-300 bg-slate-100 ${
+          isSelected ? 'ring-4 ring-emerald-500 ring-offset-2' : ''
+        }`}>
+          <img
+            src={coverImg}
+            loading="lazy"
+            decoding="async"
+            alt={displayName}
+            className="w-full h-full object-cover object-center group-hover:scale-105 transition-transform duration-500 pointer-events-none"
+          />
+        </div>
 
-        {/* Sleek Bottom Dark Gradient Overlay */}
-        <div className="absolute inset-x-0 bottom-0 p-3 sm:p-4 pt-8 sm:pt-10 bg-gradient-to-t from-black/85 via-black/40 to-transparent flex flex-col justify-end pointer-events-none">
-          <h3 className="text-white font-extrabold text-xs sm:text-base tracking-wide drop-shadow-md text-center sm:text-left leading-tight">
-            {catName}
+        {/* Clean Text Label Underneath Image Card */}
+        <div className="mt-2 text-center px-1">
+          <h3 className="text-slate-900 font-extrabold text-xs sm:text-sm leading-tight tracking-tight group-hover:text-emerald-700 transition-colors">
+            {displayName}
           </h3>
         </div>
       </Link>
