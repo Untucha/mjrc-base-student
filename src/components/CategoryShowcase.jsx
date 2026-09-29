@@ -115,25 +115,29 @@ export const CategoryShowcase = () => {
           isMobile ? 'w-32 sm:w-36 shrink-0 snap-start' : 'w-full'
         }`}
       >
-        {/* Rounded Image Card Viewport */}
-        <div className={`relative w-full aspect-square rounded-2xl overflow-hidden shadow-xs hover:shadow-md transition-all duration-300 bg-slate-100 ${
-          isSelected ? 'ring-4 ring-emerald-500 ring-offset-2' : ''
+        {/* Modern Rounded-2xl Card Container with subtle gradient, fine border, shadow & hover lift */}
+        <div className={`relative w-full aspect-square rounded-2xl overflow-hidden bg-gradient-to-b from-slate-50 to-slate-100 border border-slate-200/80 shadow-xs hover:shadow-md hover:-translate-y-1 transition-all duration-300 p-1.5 ${
+          isSelected ? 'ring-4 ring-emerald-500 ring-offset-2 border-emerald-500' : ''
         }`}>
-          <img
-            src={coverImg}
-            loading="lazy"
-            decoding="async"
-            alt={displayName}
-            className="w-full h-full object-cover object-center group-hover:scale-105 transition-transform duration-500 pointer-events-none"
-          />
+          <div className="w-full h-full rounded-xl overflow-hidden">
+            <img
+              src={coverImg}
+              loading="lazy"
+              decoding="async"
+              alt={displayName}
+              className="w-full h-full object-cover object-center group-hover:scale-105 transition-transform duration-500 pointer-events-none"
+            />
+          </div>
         </div>
 
-        {/* Clean Text Label Underneath Image Card */}
-        <div className="mt-2 text-center px-1">
-          <h3 className="text-slate-900 font-extrabold text-xs sm:text-sm leading-tight tracking-tight group-hover:text-emerald-700 transition-colors">
-            {displayName}
-          </h3>
-        </div>
+        {/* High-Contrast Pill Badge Directly Below Container */}
+        <span className={`mt-2.5 px-3 py-1 text-white rounded-full text-xs font-bold tracking-wide shadow-sm transition-colors text-center inline-block truncate max-w-full ${
+          isSelected
+            ? 'bg-emerald-600'
+            : 'bg-slate-900 group-hover:bg-emerald-600'
+        }`}>
+          {displayName}
+        </span>
       </Link>
     );
   };
@@ -162,7 +166,7 @@ export const CategoryShowcase = () => {
       </div>
 
       {/* Desktop / Laptop Viewport: Multi-Column Grid */}
-      <div className="hidden md:grid md:grid-cols-4 lg:grid-cols-6 xl:grid-cols-8 gap-4">
+      <div className="hidden md:grid md:grid-cols-6 gap-4 sm:gap-5">
         {(activeCategories || []).filter(Boolean).map((cat) => renderCard(cat, false))}
       </div>
     </section>
