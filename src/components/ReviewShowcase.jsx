@@ -5,8 +5,8 @@ import { Star, CheckCircle2, ShieldCheck, Award } from 'lucide-react';
 export const ReviewShowcase = () => {
   const { reviewsList } = useStore();
 
-  // Filter ONLY published reviews strictly from Firestore
-  const displayReviews = (reviewsList || []).filter(r => r.status === 'published');
+  // Filter ONLY approved/published reviews strictly from Firestore
+  const displayReviews = (reviewsList || []).filter(r => r && (r.status === 'approved' || r.status === 'published'));
   const totalReviewsCount = displayReviews.length;
 
   const averageRating = totalReviewsCount > 0

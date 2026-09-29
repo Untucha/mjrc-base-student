@@ -2011,6 +2011,7 @@ export const AdminDashboard = () => {
   const [activeTab, setActiveTab] = useState('analytics'); // Default: 'analytics'
   const [crmSubTab, setCrmSubTab] = useState('users'); // 'users' | 'broadcast' | 'inbox'
   const [adminBrandSubTab, setAdminBrandSubTab] = useState('speed_scale'); // 'speed_scale' | 'crawler'
+  const [adminReviewSubTab, setAdminReviewSubTab] = useState('pending'); // 'pending' | 'approved'
   const [analyticsRange, setAnalyticsRange] = useState('weekly');
   const [searchQuery, setSearchQuery] = useState('');
   const [editingProduct, setEditingProduct] = useState(null);
@@ -4462,204 +4463,404 @@ export const AdminDashboard = () => {
           </div>
         )}
 
-        {/* HUB 7: CUSTOMER REVIEWS & STOREFRONT MEDIA CONTROLS */}
-        {activeTab === 'reviews' && (
-          <div className="space-y-6">
-            {/* Storefront Media Upload Toggles */}
-            <div className="bg-white border border-slate-200/80 rounded-3xl p-6 shadow-xs space-y-4">
-              <div className="pb-3 border-b border-slate-100">
-                <h3 className="font-black text-lg text-slate-900 flex items-center gap-2">
-                  <Upload className="w-5 h-5 text-emerald-600" /> Storefront Buyer Media Upload Controls
-                </h3>
-                <p className="text-xs text-slate-500 font-semibold">Enable or disable customer photo & action video upload buttons on public review forms</p>
-              </div>
+        {/* HUB 7: CUSTOMER REVIEWS & STOREFRONT MEDIA CONTROLS & MODERATION WORKFLOW */}
+        {activeTab === 'reviews' && (() => {
+          const pendingReviews = (reviewsList || []).filter(r => r && r.status === 'pending');
+          const approvedReviews = (reviewsList || []).filter(r => r && (r.status === 'approved' || r.status === 'published'));
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs font-bold">
-                <div className="p-4 rounded-2xl bg-slate-50 border border-slate-200 flex items-center justify-between">
+          return (
+            <div className="space-y-6">
+              {/* Header & Sub-Tab Moderation Navigation Switcher */}
+              <div className="bg-white border border-slate-200/80 rounded-3xl p-6 shadow-xs space-y-4">
+                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 pb-3 border-b border-slate-100">
                   <div>
-                    <div className="font-black text-slate-900">Customer Photo Uploads</div>
-                    <div className="text-[11px] text-slate-500 font-medium">Allow buyers to attach unboxing photos</div>
+                    <h3 className="font-black text-lg text-slate-900 flex items-center gap-2">
+                      <Star className="w-5 h-5 text-amber-500 fill-amber-400" /> Customer Reviews Moderation & Media Hub
+                    </h3>
+                    <p className="text-xs text-slate-500 font-semibold">Review unboxing photos, action reels, custom wishlist demands, and approve feedback</p>
                   </div>
+
                   <button
                     type="button"
-                    onClick={() => {
-                      setAllowPhotoUploads(!allowPhotoUploads);
-                      if (showToast) showToast(`Buyer photo uploads: ${!allowPhotoUploads ? 'Enabled' : 'Disabled'}`);
+                    onClick={async () => {
+                      if (purgeDummyReviews) {
+                        await purgeDummyReviews();
+                      }
                     }}
-                    className={`px-3 py-1.5 rounded-xl font-black text-xs transition cursor-pointer border ${
-                      allowPhotoUploads ? 'bg-emerald-600 text-white border-emerald-600' : 'bg-slate-200 text-slate-700 border-slate-300'
-                    }`}
+                    className="px-3.5 py-1.5 bg-rose-50 hover:bg-rose-100 text-rose-700 font-extrabold text-xs rounded-xl border border-rose-200 transition cursor-pointer active:scale-95 flex items-center gap-1.5 shrink-0"
                   >
-                    {allowPhotoUploads ? 'ENABLED' : 'DISABLED'}
+                    <Trash2 size={13} className="text-rose-600" />
+                    <span>🧹 Purge Duplicate Mock Reviews</span>
                   </button>
                 </div>
 
-                <div className="p-4 rounded-2xl bg-slate-50 border border-slate-200 flex items-center justify-between">
-                  <div>
-                    <div className="font-black text-slate-900">Customer Video Uploads</div>
-                    <div className="text-[11px] text-slate-500 font-medium">Allow buyers to attach action reel videos</div>
-                  </div>
+                {/* Sub-Tabs: Pending Approval vs Live / Approved Reviews */}
+                <div className="inline-flex p-1 bg-slate-100 rounded-full border border-slate-200/80 self-start shadow-2xs">
                   <button
                     type="button"
-                    onClick={() => {
-                      setAllowVideoUploads(!allowVideoUploads);
-                      if (showToast) showToast(`Buyer video uploads: ${!allowVideoUploads ? 'Enabled' : 'Disabled'}`);
-                    }}
-                    className={`px-3 py-1.5 rounded-xl font-black text-xs transition cursor-pointer border ${
-                      allowVideoUploads ? 'bg-emerald-600 text-white border-emerald-600' : 'bg-slate-200 text-slate-700 border-slate-300'
+                    onClick={() => setAdminReviewSubTab('pending')}
+                    className={`px-4 py-2 rounded-full text-xs font-black transition-all cursor-pointer flex items-center gap-2 ${
+                      adminReviewSubTab === 'pending'
+                        ? 'bg-amber-500 text-white shadow-xs font-black'
+                        : 'text-slate-600 hover:text-slate-900 font-bold'
                     }`}
                   >
-                    {allowVideoUploads ? 'ENABLED' : 'DISABLED'}
+                    <span>⏳ Pending Approval</span>
+                    <span className="px-2 py-0.5 rounded-full text-[10px] bg-white/25 text-white font-extrabold">
+                      {pendingReviews.length}
+                    </span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => setAdminReviewSubTab('approved')}
+                    className={`px-4 py-2 rounded-full text-xs font-black transition-all cursor-pointer flex items-center gap-2 ${
+                      adminReviewSubTab === 'approved'
+                        ? 'bg-emerald-600 text-white shadow-xs font-black'
+                        : 'text-slate-600 hover:text-slate-900 font-bold'
+                    }`}
+                  >
+                    <span>🟢 Live / Approved Reviews</span>
+                    <span className="px-2 py-0.5 rounded-full text-[10px] bg-white/25 text-white font-extrabold">
+                      {approvedReviews.length}
+                    </span>
                   </button>
                 </div>
               </div>
-            </div>
 
-            {/* Add New Verified Buyer Review Form */}
-            <div className="bg-white border border-slate-200/80 rounded-3xl p-6 shadow-xs space-y-4">
-              <div className="pb-3 border-b border-slate-100">
-                <h3 className="font-black text-lg text-slate-900 flex items-center gap-2">
-                  <Star className="w-5 h-5 text-amber-500 fill-amber-500" /> Post New Verified Buyer Review
-                </h3>
-                <p className="text-xs text-slate-500 font-semibold">Publish genuine buyer feedback with verified badges directly to storefront review carousel</p>
-              </div>
+              {/* TAB 1: PENDING APPROVAL REVIEWS */}
+              {adminReviewSubTab === 'pending' && (
+                <div className="bg-white border border-slate-200/80 rounded-3xl p-6 shadow-xs space-y-4">
+                  <h3 className="font-black text-base text-slate-900 flex items-center gap-2">
+                    Pending Customer Reviews Awaiting Inspection ({pendingReviews.length})
+                  </h3>
 
-              <form
-                onSubmit={(e) => {
-                  e.preventDefault();
-                  if (!newReviewName.trim() || !newReviewText.trim()) return;
-                  if (addReview) {
-                    addReview({
-                      id: `rev-${Date.now()}`,
-                      userName: newReviewName,
-                      rating: Number(newReviewRating),
-                      comment: newReviewText,
-                      verifiedBuyer: newReviewVerified,
-                      date: new Date().toLocaleDateString('en-IN')
-                    });
-                  }
-                  setNewReviewName('');
-                  setNewReviewText('');
-                  if (showToast) showToast(`Published review from "${newReviewName}"!`);
-                }}
-                className="space-y-4 text-xs font-medium"
-              >
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                  <div>
-                    <label className="block text-slate-700 font-bold mb-1 uppercase tracking-wider text-[10px]">Buyer Name</label>
-                    <input
-                      type="text"
-                      required
-                      placeholder="e.g. Vikram Sharma"
-                      value={newReviewName}
-                      onChange={(e) => setNewReviewName(e.target.value)}
-                      className="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-slate-900 font-bold focus:outline-none"
-                    />
-                  </div>
+                  {pendingReviews.length === 0 ? (
+                    <div className="p-8 text-center text-xs text-slate-400 bg-slate-50 rounded-2xl border border-slate-100 font-semibold">
+                      No pending reviews awaiting approval. All incoming customer feedback is up to date!
+                    </div>
+                  ) : (
+                    <div className="space-y-4">
+                      {pendingReviews.map((rev) => {
+                        const name = rev.customerName || rev.userName || rev.name || 'Verified Customer';
+                        const phone = rev.customerPhone || rev.phone || '';
+                        const date = rev.createdAt ? new Date(rev.createdAt).toLocaleDateString('en-IN') : (rev.date || 'Today');
+                        const media = Array.isArray(rev.mediaUrls) ? rev.mediaUrls : (rev.mediaUrl ? [rev.mediaUrl] : []);
 
-                  <div>
-                    <label className="block text-slate-700 font-bold mb-1 uppercase tracking-wider text-[10px]">Star Rating (1 - 5)</label>
-                    <select
-                      value={newReviewRating}
-                      onChange={(e) => setNewReviewRating(e.target.value)}
-                      className="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-slate-900 font-bold focus:outline-none"
-                    >
-                      <option value="5">⭐⭐⭐⭐⭐ (5 / 5)</option>
-                      <option value="4">⭐⭐⭐⭐ (4 / 5)</option>
-                      <option value="3">⭐⭐⭐ (3 / 5)</option>
-                    </select>
-                  </div>
+                        return (
+                          <div key={rev.id || Math.random()} className="p-5 rounded-2xl border border-amber-200/80 bg-amber-50/30 space-y-4 shadow-xs">
+                            
+                            {/* Card Header */}
+                            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-amber-200/60 pb-3">
+                              <div className="flex items-center gap-2.5">
+                                <div className="w-9 h-9 rounded-full bg-amber-100 text-amber-900 font-black text-xs flex items-center justify-center border border-amber-200">
+                                  {name.split(' ').map(n=>n[0]).join('').slice(0, 2)}
+                                </div>
+                                <div>
+                                  <div className="flex items-center gap-2">
+                                    <h4 className="font-black text-sm text-slate-900">{name}</h4>
+                                    {rev.orderId && (
+                                      <span className="bg-slate-900 text-white font-mono text-[10px] px-2 py-0.5 rounded-md font-bold">
+                                        Order #{rev.orderId}
+                                      </span>
+                                    )}
+                                  </div>
+                                  <div className="flex items-center gap-2 text-[11px] text-slate-500 font-semibold mt-0.5">
+                                    <span className="text-amber-500">{'⭐'.repeat(rev.rating || 5)} ({rev.rating || 5}/5)</span>
+                                    <span>•</span>
+                                    <span>{date}</span>
+                                    {phone && (
+                                      <>
+                                        <span>•</span>
+                                        <span>📞 {phone}</span>
+                                      </>
+                                    )}
+                                  </div>
+                                </div>
+                              </div>
 
-                  <div>
-                    <label className="block text-slate-700 font-bold mb-1 uppercase tracking-wider text-[10px]">Verified Buyer Badge</label>
-                    <button
-                      type="button"
-                      onClick={() => setNewReviewVerified(!newReviewVerified)}
-                      className={`w-full p-3 rounded-xl font-extrabold text-xs transition border ${
-                        newReviewVerified ? 'bg-emerald-50 text-emerald-800 border-emerald-200' : 'bg-slate-100 text-slate-600 border-slate-200'
-                      }`}
-                    >
-                      {newReviewVerified ? '🟢 VERIFIED BUYER TAG ACTIVE' : '⚪ REGULAR REVIEW'}
-                    </button>
-                  </div>
+                              <span className="bg-amber-100 text-amber-900 font-black text-[10px] px-3 py-1 rounded-full uppercase self-start sm:self-auto border border-amber-200">
+                                Pending Moderation
+                              </span>
+                            </div>
+
+                            {/* Comment Text */}
+                            <p className="text-xs text-slate-800 font-medium leading-relaxed bg-white p-3.5 rounded-xl border border-slate-200/80 italic">
+                              "{rev.comment || rev.text || 'No text comment provided.'}"
+                            </p>
+
+                            {/* Uploaded Photos / Videos Grid */}
+                            {media.length > 0 && (
+                              <div className="space-y-1.5">
+                                <span className="text-[10px] font-extrabold uppercase text-slate-500 tracking-wider">Uploaded Unboxing Media ({media.length}):</span>
+                                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
+                                  {media.map((url, mIdx) => {
+                                    const isVid = url.includes('.mp4') || url.includes('.mov') || url.startsWith('data:video');
+                                    return (
+                                      <div key={mIdx} className="relative aspect-square rounded-xl overflow-hidden border border-slate-300 bg-slate-100 group">
+                                        {isVid ? (
+                                          <video src={url} controls className="w-full h-full object-cover" />
+                                        ) : (
+                                          <a href={url} target="_blank" rel="noopener noreferrer">
+                                            <img src={url} alt={`Media ${mIdx+1}`} className="w-full h-full object-cover group-hover:scale-105 transition-transform" />
+                                          </a>
+                                        )}
+                                      </div>
+                                    );
+                                  })}
+                                </div>
+                              </div>
+                            )}
+
+                            {/* Custom Wishlist Demand Box (Sales Lead) */}
+                            {rev.customProductWish && (
+                              <div className="bg-emerald-50 border border-emerald-200 rounded-xl p-3.5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+                                <div>
+                                  <div className="text-[10px] font-black uppercase text-emerald-800 tracking-wider flex items-center gap-1">
+                                    <Sparkles className="w-3.5 h-3.5 text-emerald-600" /> Customer Custom Request / Wishlist:
+                                  </div>
+                                  <div className="text-xs font-extrabold text-slate-900 mt-0.5">
+                                    {rev.customProductWish}
+                                  </div>
+                                </div>
+
+                                <a
+                                  href={`https://wa.me/${(phone || '919686078395').replace(/\D/g, '')}?text=${encodeURIComponent(
+                                    `Hi ${name}, regarding your requested RC model / spare parts wishlist (${rev.customProductWish}): we have update details from Mysore Central Hub!`
+                                  )}`}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="inline-flex items-center gap-1.5 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-black px-3.5 py-2 rounded-xl shadow-xs transition active:scale-95 shrink-0"
+                                >
+                                  <MessageCircle className="w-4 h-4" />
+                                  <span>Chat on WhatsApp (Sales Lead)</span>
+                                </a>
+                              </div>
+                            )}
+
+                            {/* Action Buttons */}
+                            <div className="flex items-center gap-2 pt-2 border-t border-amber-200/60">
+                              <button
+                                type="button"
+                                onClick={() => approveReview && approveReview(rev.id)}
+                                className="flex-1 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-black text-xs rounded-xl shadow-xs transition cursor-pointer active:scale-95 flex items-center justify-center gap-1.5"
+                              >
+                                <CheckCircle2 className="w-4 h-4" />
+                                <span>Approve & Publish to Storefront</span>
+                              </button>
+
+                              <button
+                                type="button"
+                                onClick={() => declineReview && declineReview(rev.id)}
+                                className="py-2.5 px-4 bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 font-extrabold text-xs rounded-xl transition cursor-pointer active:scale-95 flex items-center gap-1"
+                              >
+                                <XCircle className="w-4 h-4 text-rose-600" />
+                                <span>Reject / Delete</span>
+                              </button>
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
                 </div>
+              )}
 
-                <div>
-                  <label className="block text-slate-700 font-bold mb-1 uppercase tracking-wider text-[10px]">Review Comment</label>
-                  <textarea
-                    rows="3"
-                    required
-                    placeholder="Type detailed buyer review feedback..."
-                    value={newReviewText}
-                    onChange={(e) => setNewReviewText(e.target.value)}
-                    className="w-full bg-slate-50 border border-slate-200 rounded-2xl p-4 text-slate-900 focus:outline-none font-sans text-xs"
-                  />
-                </div>
+              {/* TAB 2: LIVE / APPROVED REVIEWS */}
+              {adminReviewSubTab === 'approved' && (
+                <div className="space-y-6">
+                  {/* Storefront Media Upload Toggles */}
+                  <div className="bg-white border border-slate-200/80 rounded-3xl p-6 shadow-xs space-y-4">
+                    <div className="pb-3 border-b border-slate-100">
+                      <h3 className="font-black text-lg text-slate-900 flex items-center gap-2">
+                        <Upload className="w-5 h-5 text-emerald-600" /> Storefront Buyer Media Upload Controls
+                      </h3>
+                      <p className="text-xs text-slate-500 font-semibold">Enable or disable customer photo & action video upload buttons on public review forms</p>
+                    </div>
 
-                <button
-                  type="submit"
-                  className="bg-emerald-600 hover:bg-emerald-700 text-white font-black px-6 py-3 rounded-xl transition text-xs shadow-xs cursor-pointer active:scale-95"
-                >
-                  Post Review to Storefront
-                </button>
-              </form>
-            </div>
-
-            {/* Review Audit List */}
-            <div className="bg-white border border-slate-200/80 rounded-3xl p-6 shadow-xs space-y-4">
-              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 border-b border-slate-100 pb-3">
-                <h3 className="font-black text-lg text-slate-900">
-                  Published Buyer Reviews ({reviewsList?.length || 0})
-                </h3>
-                <button
-                  type="button"
-                  onClick={async () => {
-                    if (purgeDummyReviews) {
-                      await purgeDummyReviews();
-                    }
-                  }}
-                  className="px-3.5 py-1.5 bg-rose-50 hover:bg-rose-100 text-rose-700 font-extrabold text-xs rounded-xl border border-rose-200 transition cursor-pointer active:scale-95 flex items-center gap-1.5"
-                >
-                  <Trash2 size={13} className="text-rose-600" />
-                  <span>🧹 Purge Duplicate Mock Reviews</span>
-                </button>
-              </div>
-
-              <div className="space-y-3">
-                {(!reviewsList || reviewsList.length === 0) ? (
-                  <div className="p-8 text-center text-xs text-slate-400 bg-slate-50 rounded-2xl border border-slate-100 font-semibold">
-                    No reviews published yet. Use the 'Post New Review' panel to publish verified customer media and feedback.
-                  </div>
-                ) : (
-                  reviewsList.map((rev) => (
-                    <div key={rev.id || Math.random()} className="p-4 rounded-2xl border border-slate-200 bg-slate-50/60 flex items-center justify-between gap-4">
-                      <div>
-                        <div className="flex items-center gap-2">
-                          <span className="font-black text-sm text-slate-900">{rev.userName || rev.name}</span>
-                          <span className="text-amber-500 font-black text-xs">{'⭐'.repeat(rev.rating || 5)}</span>
-                          {rev.verifiedBuyer && (
-                            <span className="bg-emerald-100 text-emerald-800 font-black text-[9px] px-2 py-0.5 rounded-md uppercase">
-                              Verified Buyer
-                            </span>
-                          )}
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs font-bold">
+                      <div className="p-4 rounded-2xl bg-slate-50 border border-slate-200 flex items-center justify-between">
+                        <div>
+                          <div className="font-black text-slate-900">Customer Photo Uploads</div>
+                          <div className="text-[11px] text-slate-500 font-medium">Allow buyers to attach unboxing photos</div>
                         </div>
-                        <p className="text-xs text-slate-700 font-medium mt-1">{rev.comment || rev.text}</p>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setAllowPhotoUploads(!allowPhotoUploads);
+                            if (showToast) showToast(`Buyer photo uploads: ${!allowPhotoUploads ? 'Enabled' : 'Disabled'}`);
+                          }}
+                          className={`px-3 py-1.5 rounded-xl font-black text-xs transition cursor-pointer border ${
+                            allowPhotoUploads ? 'bg-emerald-600 text-white border-emerald-600' : 'bg-slate-200 text-slate-700 border-slate-300'
+                          }`}
+                        >
+                          {allowPhotoUploads ? 'ENABLED' : 'DISABLED'}
+                        </button>
+                      </div>
+
+                      <div className="p-4 rounded-2xl bg-slate-50 border border-slate-200 flex items-center justify-between">
+                        <div>
+                          <div className="font-black text-slate-900">Customer Video Uploads</div>
+                          <div className="text-[11px] text-slate-500 font-medium">Allow buyers to attach action reel videos</div>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setAllowVideoUploads(!allowVideoUploads);
+                            if (showToast) showToast(`Buyer video uploads: ${!allowVideoUploads ? 'Enabled' : 'Disabled'}`);
+                          }}
+                          className={`px-3 py-1.5 rounded-xl font-black text-xs transition cursor-pointer border ${
+                            allowVideoUploads ? 'bg-emerald-600 text-white border-emerald-600' : 'bg-slate-200 text-slate-700 border-slate-300'
+                          }`}
+                        >
+                          {allowVideoUploads ? 'ENABLED' : 'DISABLED'}
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Add New Verified Buyer Review Form */}
+                  <div className="bg-white border border-slate-200/80 rounded-3xl p-6 shadow-xs space-y-4">
+                    <div className="pb-3 border-b border-slate-100">
+                      <h3 className="font-black text-lg text-slate-900 flex items-center gap-2">
+                        <Star className="w-5 h-5 text-amber-500 fill-amber-500" /> Post New Verified Buyer Review (Admin Direct)
+                      </h3>
+                      <p className="text-xs text-slate-500 font-semibold">Publish genuine buyer feedback with verified badges directly to storefront review carousel</p>
+                    </div>
+
+                    <form
+                      onSubmit={(e) => {
+                        e.preventDefault();
+                        if (!newReviewName.trim() || !newReviewText.trim()) return;
+                        if (addReview) {
+                          addReview({
+                            id: `rev-${Date.now()}`,
+                            customerName: newReviewName,
+                            userName: newReviewName,
+                            rating: Number(newReviewRating),
+                            comment: newReviewText,
+                            verifiedBuyer: newReviewVerified,
+                            status: 'approved',
+                            createdAt: new Date().toISOString()
+                          });
+                        }
+                        setNewReviewName('');
+                        setNewReviewText('');
+                        if (showToast) showToast(`Published review from "${newReviewName}"!`);
+                      }}
+                      className="space-y-4 text-xs font-medium"
+                    >
+                      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                        <div>
+                          <label className="block text-slate-700 font-bold mb-1 uppercase tracking-wider text-[10px]">Buyer Name</label>
+                          <input
+                            type="text"
+                            required
+                            placeholder="e.g. Vikram Sharma"
+                            value={newReviewName}
+                            onChange={(e) => setNewReviewName(e.target.value)}
+                            className="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-slate-900 font-bold focus:outline-none"
+                          />
+                        </div>
+
+                        <div>
+                          <label className="block text-slate-700 font-bold mb-1 uppercase tracking-wider text-[10px]">Star Rating (1 - 5)</label>
+                          <select
+                            value={newReviewRating}
+                            onChange={(e) => setNewReviewRating(e.target.value)}
+                            className="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-slate-900 font-bold focus:outline-none"
+                          >
+                            <option value="5">⭐⭐⭐⭐⭐ (5 / 5)</option>
+                            <option value="4">⭐⭐⭐⭐ (4 / 5)</option>
+                            <option value="3">⭐⭐⭐ (3 / 5)</option>
+                          </select>
+                        </div>
+
+                        <div>
+                          <label className="block text-slate-700 font-bold mb-1 uppercase tracking-wider text-[10px]">Verified Buyer Badge</label>
+                          <button
+                            type="button"
+                            onClick={() => setNewReviewVerified(!newReviewVerified)}
+                            className={`w-full p-3 rounded-xl font-extrabold text-xs transition border ${
+                              newReviewVerified ? 'bg-emerald-50 text-emerald-800 border-emerald-200' : 'bg-slate-100 text-slate-600 border-slate-200'
+                            }`}
+                          >
+                            {newReviewVerified ? '🟢 VERIFIED BUYER TAG ACTIVE' : '⚪ REGULAR REVIEW'}
+                          </button>
+                        </div>
+                      </div>
+
+                      <div>
+                        <label className="block text-slate-700 font-bold mb-1 uppercase tracking-wider text-[10px]">Review Comment</label>
+                        <textarea
+                          rows="3"
+                          required
+                          placeholder="Type detailed buyer review feedback..."
+                          value={newReviewText}
+                          onChange={(e) => setNewReviewText(e.target.value)}
+                          className="w-full bg-slate-50 border border-slate-200 rounded-2xl p-4 text-slate-900 focus:outline-none font-sans text-xs"
+                        />
                       </div>
 
                       <button
-                        type="button"
-                        onClick={() => deleteReview && deleteReview(rev.id)}
-                        className="p-2 rounded-xl bg-rose-50 hover:bg-rose-100 text-rose-600 border border-rose-200 text-xs font-bold transition cursor-pointer"
+                        type="submit"
+                        className="bg-emerald-600 hover:bg-emerald-700 text-white font-black px-6 py-3 rounded-xl transition text-xs shadow-xs cursor-pointer active:scale-95"
                       >
-                        <Trash2 size={14} />
+                        Post Review to Storefront
                       </button>
+                    </form>
+                  </div>
+
+                  {/* Live Approved Reviews List */}
+                  <div className="bg-white border border-slate-200/80 rounded-3xl p-6 shadow-xs space-y-4">
+                    <h3 className="font-black text-lg text-slate-900">
+                      Live Approved Buyer Reviews ({approvedReviews.length})
+                    </h3>
+
+                    <div className="space-y-3">
+                      {approvedReviews.length === 0 ? (
+                        <div className="p-8 text-center text-xs text-slate-400 bg-slate-50 rounded-2xl border border-slate-100 font-semibold">
+                          No reviews published yet. Use the 'Post New Review' panel to publish verified customer media and feedback.
+                        </div>
+                      ) : (
+                        approvedReviews.map((rev) => (
+                          <div key={rev.id || Math.random()} className="p-4 rounded-2xl border border-slate-200 bg-slate-50/60 flex items-center justify-between gap-4">
+                            <div>
+                              <div className="flex items-center gap-2">
+                                <span className="font-black text-sm text-slate-900">{rev.customerName || rev.userName || rev.name}</span>
+                                <span className="text-amber-500 font-black text-xs">{'⭐'.repeat(rev.rating || 5)}</span>
+                                {(rev.verifiedBuyer || rev.status === 'approved' || rev.status === 'published') && (
+                                  <span className="bg-emerald-100 text-emerald-800 font-black text-[9px] px-2 py-0.5 rounded-md uppercase">
+                                    Verified Buyer
+                                  </span>
+                                )}
+                              </div>
+                              <p className="text-xs text-slate-700 font-medium mt-1">{rev.comment || rev.text}</p>
+                              {rev.customProductWish && (
+                                <p className="text-[11px] text-emerald-700 font-bold mt-1">
+                                  Wishlist: {rev.customProductWish}
+                                </p>
+                              )}
+                            </div>
+
+                            <button
+                              type="button"
+                              onClick={() => deleteReview && deleteReview(rev.id)}
+                              className="p-2 rounded-xl bg-rose-50 hover:bg-rose-100 text-rose-600 border border-rose-200 text-xs font-bold transition cursor-pointer"
+                              title="Delete Review"
+                            >
+                              <Trash2 size={14} />
+                            </button>
+                          </div>
+                        ))
+                      )}
                     </div>
-                  ))
-                )}
-              </div>
+                  </div>
+                </div>
+              )}
             </div>
-          </div>
-        )}
+          );
+        })()}
 
         {/* HUB 5: SHOP BY CATEGORY (NESTED WITH INLINE BRAND CONTROLS) */}
         {activeTab === 'categories' && (

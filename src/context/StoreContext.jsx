@@ -2609,12 +2609,12 @@ export const StoreProvider = ({ children }) => {
 
   const approveReview = useCallback(async (reviewId) => {
     setReviewsList(prev =>
-      (prev || []).map(r => (r.id === reviewId ? { ...r, status: 'published' } : r))
+      (prev || []).map(r => (r.id === reviewId ? { ...r, status: 'approved' } : r))
     );
     if (db && reviewId) {
       try {
         const docRef = doc(db, 'reviews', String(reviewId));
-        await setDoc(docRef, { status: 'published' }, { merge: true });
+        await setDoc(docRef, { status: 'approved' }, { merge: true });
       } catch (err) {
         console.warn('[Firestore] approveReview error:', err);
       }
@@ -2628,7 +2628,7 @@ export const StoreProvider = ({ children }) => {
     if (db && reviewId) {
       try {
         const docRef = doc(db, 'reviews', String(reviewId));
-        await deleteDoc(docRef);
+        await deleteDoc(docRef).catch(() => setDoc(docRef, { status: 'rejected' }, { merge: true }));
       } catch (err) {
         console.warn('[Firestore] declineReview error:', err);
       }
@@ -2638,10 +2638,17 @@ export const StoreProvider = ({ children }) => {
 
   const addReview = useCallback(async (review) => {
     const newRev = {
+      orderId: review.orderId || '',
+      customerName: review.customerName || review.userName || review.name || 'Verified Racer',
+      customerPhone: review.customerPhone || review.phone || '',
+      rating: Number(review.rating || 5),
+      comment: review.comment || review.text || '',
+      mediaUrls: Array.isArray(review.mediaUrls) ? review.mediaUrls : (review.mediaUrl ? [review.mediaUrl] : []),
+      customProductWish: review.customProductWish || '',
+      status: review.status || 'pending',
+      createdAt: review.createdAt || new Date().toISOString(),
       ...review,
-      id: review.id || `rev-${Date.now()}`,
-      status: review.status || 'published',
-      created_at: new Date().toISOString()
+      id: review.id || `rev-${Date.now()}`
     };
     setReviewsList(prev => [newRev, ...(prev || []).filter(r => r.id !== newRev.id)]);
     if (db) {
@@ -2652,6 +2659,7 @@ export const StoreProvider = ({ children }) => {
         console.warn('[Firestore] addReview error:', err);
       }
     }
+    return newRev;
   }, []);
 
   const purgeDummyReviews = useCallback(async () => {

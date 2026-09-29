@@ -9,6 +9,7 @@ import WishlistPage, { WishlistPage as WishlistPageNamed } from './pages/Wishlis
 import { CategoryProductPage } from './pages/CategoryProductPage';
 import { ProductDetailPage } from './pages/ProductDetailPage';
 import { BrandPageView } from './pages/BrandPageView';
+import { SubmitReviewPage } from './pages/SubmitReviewPage';
 import { TrackOrderPage } from './pages/TrackOrderPage';
 import { ShippingPolicyPage, ReplacementPolicyPage, TermsConditionsPage, PrivacyPolicyPage } from './pages/LegalPages';
 import { AdminDashboard } from './pages/AdminDashboard';
@@ -169,6 +170,7 @@ const MainContent = () => {
           <Route path="/product/:id" element={<ProductDetailPage />} />
           <Route path="/product/:productId" element={<ProductDetailPage />} />
           <Route path="/cart" element={<AllProductsPage />} />
+          <Route path="/review" element={<SubmitReviewPage />} />
           <Route path="/track" element={<TrackOrderPage />} />
           <Route path="/shipping-policy" element={<ShippingPolicyPage />} />
           <Route path="/replacement-policy" element={<ReplacementPolicyPage />} />
