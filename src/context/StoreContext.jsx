@@ -2554,15 +2554,6 @@ export const StoreProvider = ({ children }) => {
                 data: { orderId: order.id, name: order.customerName },
                 config: whatsappConfig
               });
-              // Auto-simulate incoming WhatsApp feedback response in pending queue
-              receiveWhatsAppReviewFeedback({
-                phone: order.mobile,
-                customerName: order.customerName,
-                city: order.city || 'Mysore Hub',
-                carModel: order.items?.[0]?.title || 'Scale Hobby RC Machine',
-                rating: 5,
-                comment: 'Unbelievable 6S speed & portal axle trail performance! Delivered in under 24h from Mysore Central Hub.'
-              });
             }
             return { ...order, status: 'Delivered', lastSyncedAt: new Date().toISOString() };
           }
@@ -2662,6 +2653,65 @@ export const StoreProvider = ({ children }) => {
       }
     }
   }, []);
+
+  const purgeDummyReviews = useCallback(async () => {
+    if (!db) return;
+    try {
+      const q = query(collection(db, 'reviews'));
+      const snapshot = await getDocs(q);
+      const dummyDocs = snapshot.docs.filter(docSnap => {
+        const data = docSnap.data();
+        const txt = (data.comment || data.text || data.review || '').trim();
+        return txt.includes('Unbelievable 6S speed & portal axle trail performance!') || txt.includes('Unbelievable 6S speed');
+      });
+
+      if (dummyDocs.length > 0) {
+        console.log(`[Firestore] Purging ${dummyDocs.length} duplicate mock reviews...`);
+        const chunkSize = 400;
+        for (let i = 0; i < dummyDocs.length; i += chunkSize) {
+          const chunk = dummyDocs.slice(i, i + chunkSize);
+          const batch = writeBatch(db);
+          chunk.forEach(docSnap => batch.delete(docSnap.ref));
+          await batch.commit();
+        }
+        setReviewsList(prev => (prev || []).filter(r => {
+          const txt = (r.comment || r.text || r.review || '').trim();
+          return !txt.includes('Unbelievable 6S speed & portal axle trail performance!') && !txt.includes('Unbelievable 6S speed');
+        }));
+        showToast(`Successfully purged ${dummyDocs.length} duplicate mock reviews!`);
+      } else {
+        setReviewsList(prev => (prev || []).filter(r => {
+          const txt = (r.comment || r.text || r.review || '').trim();
+          return !txt.includes('Unbelievable 6S speed & portal axle trail performance!') && !txt.includes('Unbelievable 6S speed');
+        }));
+        showToast('No mock reviews found to purge.');
+      }
+    } catch (err) {
+      console.error('[Firestore] purgeDummyReviews error:', err);
+      showToast('Error purging mock reviews.');
+    }
+  }, [showToast]);
+
+  // Real-time Firestore sync for 'reviews' collection & auto-filter dummy reviews
+  useEffect(() => {
+    if (!db) return;
+    const revCol = collection(db, 'reviews');
+    const unsubscribe = onSnapshot(revCol, (snapshot) => {
+      const liveDocs = snapshot.docs.map(docSnap => ({ id: docSnap.id, ...docSnap.data() }));
+      const cleanDocs = liveDocs.filter(r => {
+        const txt = (r.comment || r.text || r.review || '').trim();
+        return !txt.includes('Unbelievable 6S speed & portal axle trail performance!') && !txt.includes('Unbelievable 6S speed');
+      });
+      setReviewsList(cleanDocs);
+      try { localStorage.setItem('mj_reviews_list', JSON.stringify(cleanDocs)); } catch (e) {}
+    }, (err) => console.warn('[Firestore] reviews listener notice:', err));
+    return () => unsubscribe();
+  }, []);
+
+  // Auto-run purge on mount to clean existing duplicate Firestore records
+  useEffect(() => {
+    purgeDummyReviews();
+  }, [purgeDummyReviews]);
 
   const deleteReview = useCallback(async (id) => {
     setReviewsList(prev => (prev || []).filter(r => r.id !== id));
@@ -3206,6 +3256,7 @@ export const StoreProvider = ({ children }) => {
     reviewsList,
     addReview,
     deleteReview,
+    purgeDummyReviews,
     receiveWhatsAppReviewFeedback,
     approveReview,
     declineReview,

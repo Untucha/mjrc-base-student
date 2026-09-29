@@ -1996,6 +1996,7 @@ export const AdminDashboard = () => {
     reviewsList,
     addReview,
     deleteReview,
+    purgeDummyReviews,
     approveReview,
     declineReview,
     purgeAllTestOrdersAndResetDatabase
@@ -4606,14 +4607,28 @@ export const AdminDashboard = () => {
 
             {/* Review Audit List */}
             <div className="bg-white border border-slate-200/80 rounded-3xl p-6 shadow-xs space-y-4">
-              <h3 className="font-black text-lg text-slate-900">
-                Published Buyer Reviews ({reviewsList?.length || 0})
-              </h3>
+              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 border-b border-slate-100 pb-3">
+                <h3 className="font-black text-lg text-slate-900">
+                  Published Buyer Reviews ({reviewsList?.length || 0})
+                </h3>
+                <button
+                  type="button"
+                  onClick={async () => {
+                    if (purgeDummyReviews) {
+                      await purgeDummyReviews();
+                    }
+                  }}
+                  className="px-3.5 py-1.5 bg-rose-50 hover:bg-rose-100 text-rose-700 font-extrabold text-xs rounded-xl border border-rose-200 transition cursor-pointer active:scale-95 flex items-center gap-1.5"
+                >
+                  <Trash2 size={13} className="text-rose-600" />
+                  <span>🧹 Purge Duplicate Mock Reviews</span>
+                </button>
+              </div>
 
               <div className="space-y-3">
                 {(!reviewsList || reviewsList.length === 0) ? (
-                  <div className="p-8 text-center text-xs text-slate-400 bg-slate-50 rounded-2xl border border-slate-100">
-                    No buyer reviews published yet. Use the form above to add storefront reviews.
+                  <div className="p-8 text-center text-xs text-slate-400 bg-slate-50 rounded-2xl border border-slate-100 font-semibold">
+                    No reviews published yet. Use the 'Post New Review' panel to publish verified customer media and feedback.
                   </div>
                 ) : (
                   reviewsList.map((rev) => (
