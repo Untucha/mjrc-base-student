@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { useParams, Link, useNavigate, useLocation } from 'react-router-dom';
 import { useStore } from '../context/StoreContext';
+import { getProductCoinRules } from '../utils/coinUtils';
 import { TrustCards } from '../components/TrustBadges';
 import {
   ArrowLeft,
@@ -721,19 +722,26 @@ export const ProductDetailPage = () => {
             </div>
 
             {/* STEP 6: Rewards / Coin Earning Banner */}
-            {product.allowCoinRedemption !== false && coinReward > 0 && (
-              <div className="bg-amber-500/10 border border-amber-300/80 rounded-2xl p-3.5 flex items-center justify-between gap-3 text-xs">
-                <div className="flex items-center gap-2.5">
-                  <div className="w-8 h-8 rounded-xl bg-amber-500 text-white flex items-center justify-center text-base font-black shrink-0 shadow-xs">
-                    🪙
-                  </div>
-                  <div>
-                    <div className="font-black text-amber-950">Earn up to {coinReward} RC Coins on this order</div>
-                    <div className="text-[11px] font-semibold text-amber-800/80">Redeem coins for instant discounts on future scale parts & upgrades</div>
+            {(() => {
+              const rules = getProductCoinRules(product);
+              return (
+                <div className="bg-amber-500/10 border border-amber-300/80 rounded-2xl p-3.5 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs">
+                  <div className="flex items-center gap-2.5">
+                    <div className="w-8 h-8 rounded-xl bg-amber-500 text-white flex items-center justify-center text-base font-black shrink-0 shadow-xs">
+                      🪙
+                    </div>
+                    <div>
+                      <div className="font-black text-amber-950">Earn {rules.rewardCoinsEarned || 0} RC Coins on delivery</div>
+                      {rules.allowCoinRedemption && rules.coinsToDeduct > 0 && rules.rupeeDiscountGiven > 0 && (
+                        <div className="text-[11px] font-extrabold text-emerald-800 mt-0.5">
+                          Redeem {rules.coinsToDeduct} coins for ₹{rules.rupeeDiscountGiven} OFF
+                        </div>
+                      )}
+                    </div>
                   </div>
                 </div>
-              </div>
-            )}
+              );
+            })()}
 
             {/* STEP 7: Detailed Description, Key Specifications, Features & Highlights */}
             <div className="space-y-4 pt-2 border-t border-slate-200">

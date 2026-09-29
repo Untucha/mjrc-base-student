@@ -2,6 +2,7 @@ import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useStore } from '../context/StoreContext';
 import { Heart, Star, Eye, Coins } from 'lucide-react';
+import { getProductCoinRules } from '../utils/coinUtils';
 
 export const ProductCard = ({ product, onMoveToCart, showMoveToCart = false }) => {
   const navigate = useNavigate();
@@ -115,17 +116,30 @@ export const ProductCard = ({ product, onMoveToCart, showMoveToCart = false }) =
             {typeof product.title === 'string' ? product.title : (typeof product.name === 'string' ? product.name : (product.title?.title || product.name?.name || 'RC Vehicle'))}
           </h3>
 
-          {/* Coins & Special Exempt Badge */}
-          {product.allowCoinRedemption === false ? (
-            <div className="mt-1.5 inline-flex items-center gap-1 text-[9px] sm:text-[10px] font-bold text-rose-800 bg-rose-50 border border-rose-200 px-1.5 sm:px-2 py-0.5 rounded-md">
-              <span>Special Item - Coin Discount Exempt</span>
-            </div>
-          ) : (
-            <div className="mt-1.5 inline-flex items-center gap-1 text-[9px] sm:text-[10px] font-bold text-amber-900 bg-amber-50 border border-amber-200 px-1.5 sm:px-2 py-0.5 rounded-md">
-              <Coins className="w-3 h-3 text-amber-500" />
-              <span>Earn {typeof (product.coinsRewardedOnPurchase || product.rcCoins) === 'number' ? (product.coinsRewardedOnPurchase || product.rcCoins) : 100} Coins</span>
-            </div>
-          )}
+          {/* Coins & Special Exempt Badges */}
+          {(() => {
+            const rules = getProductCoinRules(product);
+            if (!rules.allowCoinRedemption) {
+              return (
+                <div className="mt-1.5 inline-flex items-center gap-1 text-[9px] sm:text-[10px] font-bold text-rose-800 bg-rose-50 border border-rose-200 px-1.5 sm:px-2 py-0.5 rounded-md">
+                  <span>Special Item - Coin Discount Exempt</span>
+                </div>
+              );
+            }
+            return (
+              <div className="mt-1.5 flex flex-wrap items-center gap-1 text-[9px] sm:text-[10px] font-bold">
+                <div className="inline-flex items-center gap-1 text-amber-900 bg-amber-50 border border-amber-200 px-1.5 sm:px-2 py-0.5 rounded-md">
+                  <Coins className="w-3 h-3 text-amber-500" />
+                  <span>Earn {rules.rewardCoinsEarned || 0} RC Coins on delivery</span>
+                </div>
+                {rules.coinsToDeduct > 0 && rules.rupeeDiscountGiven > 0 && (
+                  <div className="inline-flex items-center gap-1 text-emerald-800 bg-emerald-50 border border-emerald-200 px-1.5 sm:px-2 py-0.5 rounded-md">
+                    <span>Redeem {rules.coinsToDeduct} coins for ₹{rules.rupeeDiscountGiven} OFF</span>
+                  </div>
+                )}
+              </div>
+            );
+          })()}
         </div>
 
         {/* Price & Action Button */}

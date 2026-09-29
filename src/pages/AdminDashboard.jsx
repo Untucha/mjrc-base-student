@@ -135,9 +135,9 @@ const FullProductModal = ({ product = null, preset = null, onClose, onSave }) =>
     brand: product?.brand !== undefined && product?.brand !== null ? product.brand : (preset?.brand || ''),
     badge: product?.badge !== undefined && product?.badge !== null ? product.badge : '',
     allowCoinRedemption: product ? product.allowCoinRedemption !== false : true,
-    maxCoinsRedeemable: product?.maxCoinsRedeemable !== undefined ? product.maxCoinsRedeemable : 500,
-    coinDiscountAmount: product?.coinDiscountAmount !== undefined ? product.coinDiscountAmount : Math.round((product?.maxCoinsRedeemable !== undefined ? product.maxCoinsRedeemable : 500) / 5),
-    coinsRewardedOnPurchase: product?.coinsRewardedOnPurchase !== undefined ? product.coinsRewardedOnPurchase : (product?.rcCoins !== undefined ? product.rcCoins : 100),
+    rewardCoinsEarned: product?.rewardCoinsEarned !== undefined ? Number(product.rewardCoinsEarned) : (product?.coinsRewardedOnPurchase !== undefined ? Number(product.coinsRewardedOnPurchase) : (product?.rcCoins !== undefined ? Number(product.rcCoins) : 0)),
+    coinsToDeduct: product?.coinsToDeduct !== undefined ? Number(product.coinsToDeduct) : (product?.maxCoinsRedeemable !== undefined ? Number(product.maxCoinsRedeemable) : 0),
+    rupeeDiscountGiven: product?.rupeeDiscountGiven !== undefined ? Number(product.rupeeDiscountGiven) : (product?.coinDiscountAmount !== undefined ? Number(product.coinDiscountAmount) : 0),
     isFeatured: product ? (product.isFeatured !== false && product.featuredOnHome !== false) : (preset?.isFeatured !== undefined ? Boolean(preset.isFeatured) : true),
     model3dUrl: product?.model3dUrl || product?.model3d || '',
     enable3DView: product ? (product.enable3DView !== false && product.show3dViewer !== false) : true,
@@ -233,10 +233,13 @@ const FullProductModal = ({ product = null, preset = null, onClose, onSave }) =>
       hasColors: Boolean(formData.hasColors && cleanColors.length > 0),
       availableColors: cleanColors,
       allowCoinRedemption: Boolean(formData.allowCoinRedemption !== false),
-      maxCoinsRedeemable: Number(formData.maxCoinsRedeemable !== undefined ? formData.maxCoinsRedeemable : 500),
-      coinDiscountAmount: calculatedRupeeDiscount,
-      coinsRewardedOnPurchase: Number(formData.coinsRewardedOnPurchase !== undefined ? formData.coinsRewardedOnPurchase : 100),
-      rcCoins: Number(formData.coinsRewardedOnPurchase !== undefined ? formData.coinsRewardedOnPurchase : 100),
+      rewardCoinsEarned: Number(formData.rewardCoinsEarned || 0),
+      coinsRewardedOnPurchase: Number(formData.rewardCoinsEarned || 0),
+      rcCoins: Number(formData.rewardCoinsEarned || 0),
+      coinsToDeduct: Number(formData.coinsToDeduct || 0),
+      maxCoinsRedeemable: Number(formData.coinsToDeduct || 0),
+      rupeeDiscountGiven: Number(formData.rupeeDiscountGiven || 0),
+      coinDiscountAmount: Number(formData.rupeeDiscountGiven || 0),
       isFeatured: Boolean(formData.isFeatured),
       featuredOnHome: Boolean(formData.isFeatured),
       image: mainImg,
@@ -467,17 +470,10 @@ const FullProductModal = ({ product = null, preset = null, onClose, onSave }) =>
                       type="number"
                       min="0"
                       disabled={formData.allowCoinRedemption === false}
-                      value={formData.maxCoinsRedeemable !== undefined ? formData.maxCoinsRedeemable : 500}
-                      onChange={(e) => {
-                        const val = Math.max(0, Number(e.target.value));
-                        setFormData({
-                          ...formData,
-                          maxCoinsRedeemable: val,
-                          coinDiscountAmount: Math.round(val / 5)
-                        });
-                      }}
+                      value={formData.coinsToDeduct}
+                      onChange={(e) => setFormData({ ...formData, coinsToDeduct: Math.max(0, Number(e.target.value)) })}
                       className="w-full bg-white border border-slate-300 rounded-xl px-3 py-2 text-slate-900 font-bold text-xs focus:outline-none focus:border-amber-500 disabled:opacity-50"
-                      placeholder="e.g. 100"
+                      placeholder="e.g. 200"
                     />
                   </div>
 
@@ -490,10 +486,10 @@ const FullProductModal = ({ product = null, preset = null, onClose, onSave }) =>
                       type="number"
                       min="0"
                       disabled={formData.allowCoinRedemption === false}
-                      value={formData.coinDiscountAmount !== undefined ? formData.coinDiscountAmount : Math.round((formData.maxCoinsRedeemable || 500) / 5)}
-                      onChange={(e) => setFormData({ ...formData, coinDiscountAmount: Math.max(0, Number(e.target.value)) })}
+                      value={formData.rupeeDiscountGiven}
+                      onChange={(e) => setFormData({ ...formData, rupeeDiscountGiven: Math.max(0, Number(e.target.value)) })}
                       className="w-full bg-white border border-slate-300 rounded-xl px-3 py-2 text-emerald-700 font-black text-xs focus:outline-none focus:border-emerald-600 disabled:opacity-50"
-                      placeholder="e.g. 20"
+                      placeholder="e.g. 40"
                     />
                   </div>
 
@@ -505,15 +501,15 @@ const FullProductModal = ({ product = null, preset = null, onClose, onSave }) =>
                     <input
                       type="number"
                       min="0"
-                      value={formData.coinsRewardedOnPurchase !== undefined ? formData.coinsRewardedOnPurchase : 100}
-                      onChange={(e) => setFormData({ ...formData, coinsRewardedOnPurchase: Math.max(0, Number(e.target.value)) })}
+                      value={formData.rewardCoinsEarned}
+                      onChange={(e) => setFormData({ ...formData, rewardCoinsEarned: Math.max(0, Number(e.target.value)) })}
                       className="w-full bg-white border border-slate-300 rounded-xl px-3 py-2 text-slate-900 font-bold text-xs focus:outline-none focus:border-emerald-600"
                       placeholder="e.g. 100"
                     />
                   </div>
                 </div>
                 <p className="text-[10px] text-amber-800 font-semibold italic pt-0.5">
-                  Customer spends {formData.maxCoinsRedeemable || 100} coins and gets exactly ₹{formData.coinDiscountAmount !== undefined ? formData.coinDiscountAmount : Math.round((formData.maxCoinsRedeemable || 100) / 5)} off.
+                  Customer spends {formData.coinsToDeduct || 0} coins to get exactly ₹{formData.rupeeDiscountGiven || 0} off. Earns {formData.rewardCoinsEarned || 0} RC Coins on delivery.
                 </p>
               </div>
 

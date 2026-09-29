@@ -2144,14 +2144,10 @@ export const StoreProvider = ({ children }) => {
       });
     }
 
-    // Loyalty Coins processing
-    if (orderDetails.coinsRedeemed) {
+    // Loyalty Coins processing: Deduct strictly exact calculated spent coins from user wallet in Firestore
+    if (orderDetails.coinsRedeemed && orderDetails.coinsRedeemed > 0) {
       redeemUserCoins(orderDetails.coinsRedeemed);
     }
-    
-    // Award earned coins based on purchase
-    const earnedCoins = Math.round(finalTotal * 0.01);
-    addUserCoins(earnedCoins);
 
     // Order-Gated Referral Check
     const orderMobile = newOrder.mobile;
@@ -2270,6 +2266,35 @@ export const StoreProvider = ({ children }) => {
       await setDoc(docRef, patch, { merge: true });
 
       const targetOrder = (orders || []).find(o => String(o.id) === String(orderId)) || { id: orderId, ...patch };
+
+      // Delivery-Triggered Reward Coins Logic
+      if (newStatus.toLowerCase() === 'delivered' && !targetOrder.rewardCoinsCredited) {
+        const items = targetOrder.items || [];
+        const totalRewardCoins = items.reduce((sum, item) => {
+          const perItemCoins = item.rewardCoinsEarned !== undefined
+            ? Number(item.rewardCoinsEarned)
+            : (item.coinsRewardedOnPurchase !== undefined
+              ? Number(item.coinsRewardedOnPurchase)
+              : (item.rcCoins !== undefined ? Number(item.rcCoins) : 0));
+          const qty = Number(item.qty || item.quantity || 1);
+          return sum + (perItemCoins * qty);
+        }, 0);
+
+        const rawPhone = targetOrder.customerPhone || targetOrder.mobile || targetOrder.phone;
+        const pure10 = getPure10Phone(rawPhone);
+
+        if (totalRewardCoins > 0 && pure10 && pure10.length === 10 && db) {
+          try {
+            const userDocRef = doc(db, 'users', `+91${pure10}`);
+            await setDoc(userDocRef, { coins: increment(totalRewardCoins), rcCoins: increment(totalRewardCoins) }, { merge: true });
+            patch.rewardCoinsCredited = true;
+            patch.rewardCoinsAmount = totalRewardCoins;
+            if (showToast) showToast(`🎉 Order Delivered! +${totalRewardCoins} RC Coins credited to customer wallet!`);
+          } catch (err) {
+            console.error('Error crediting delivery reward coins:', err);
+          }
+        }
+      }
 
       // Dispatch Milestone Logistics Alerts via Intelligent Shiprocket Analyzer
       await analyzeAndProcessShiprocketStatus(targetOrder, newStatus);

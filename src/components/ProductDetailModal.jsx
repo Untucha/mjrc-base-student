@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { useStore } from '../context/StoreContext';
+import { getProductCoinRules } from '../utils/coinUtils';
 import {
   X,
   ShoppingCart,
@@ -585,19 +586,26 @@ export const ProductDetailModal = () => {
               </div>
 
               {/* Rewards / Coin Earning Banner */}
-              {product.allowCoinRedemption !== false && coinReward > 0 && (
-                <div className="bg-amber-500/10 border border-amber-300/80 rounded-2xl p-3 flex items-center justify-between gap-2 text-xs">
-                  <div className="flex items-center gap-2">
-                    <div className="w-7 h-7 rounded-lg bg-amber-500 text-white flex items-center justify-center text-sm font-black shrink-0 shadow-xs">
-                      🪙
-                    </div>
-                    <div>
-                      <div className="font-black text-amber-950 text-xs">Earn up to {coinReward} RC Coins on this order</div>
-                      <div className="text-[10px] font-semibold text-amber-800/80">Redeem coins for instant discounts on future scale parts</div>
+              {(() => {
+                const rules = getProductCoinRules(product);
+                return (
+                  <div className="bg-amber-500/10 border border-amber-300/80 rounded-2xl p-3 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 text-xs">
+                    <div className="flex items-center gap-2">
+                      <div className="w-7 h-7 rounded-lg bg-amber-500 text-white flex items-center justify-center text-sm font-black shrink-0 shadow-xs">
+                        🪙
+                      </div>
+                      <div>
+                        <div className="font-black text-amber-950 text-xs">Earn {rules.rewardCoinsEarned || 0} RC Coins on delivery</div>
+                        {rules.allowCoinRedemption && rules.coinsToDeduct > 0 && rules.rupeeDiscountGiven > 0 && (
+                          <div className="text-[10px] font-extrabold text-emerald-800 mt-0.5">
+                            Redeem {rules.coinsToDeduct} coins for ₹{rules.rupeeDiscountGiven} OFF
+                          </div>
+                        )}
+                      </div>
                     </div>
                   </div>
-                </div>
-              )}
+                );
+              })()}
 
               {/* STEP 7: Spares Add-on Checklist */}
               {addonsConfig.enabled && (

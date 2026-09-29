@@ -225,11 +225,10 @@ export const AdminConsole = () => {
         brand: prod.brand || 'TRAXXAS',
         price: prod.price || 2999,
         mrp: prod.mrp || 3999,
-        rcCoins: prod.coinsRewardedOnPurchase !== undefined ? prod.coinsRewardedOnPurchase : (prod.rcCoins || 100),
         allowCoinRedemption: prod.allowCoinRedemption !== false,
-        maxCoinsRedeemable: prod.maxCoinsRedeemable !== undefined ? prod.maxCoinsRedeemable : 500,
-        coinDiscountAmount: prod.coinDiscountAmount !== undefined ? prod.coinDiscountAmount : Math.round((prod.maxCoinsRedeemable || 500) / 5),
-        coinsRewardedOnPurchase: prod.coinsRewardedOnPurchase !== undefined ? prod.coinsRewardedOnPurchase : (prod.rcCoins || 100),
+        rewardCoinsEarned: prod.rewardCoinsEarned !== undefined ? Number(prod.rewardCoinsEarned) : (prod.coinsRewardedOnPurchase !== undefined ? Number(prod.coinsRewardedOnPurchase) : (prod.rcCoins || 0)),
+        coinsToDeduct: prod.coinsToDeduct !== undefined ? Number(prod.coinsToDeduct) : (prod.maxCoinsRedeemable !== undefined ? Number(prod.maxCoinsRedeemable) : 0),
+        rupeeDiscountGiven: prod.rupeeDiscountGiven !== undefined ? Number(prod.rupeeDiscountGiven) : (prod.coinDiscountAmount !== undefined ? Number(prod.coinDiscountAmount) : 0),
         image: prod.image || 'https://images.unsplash.com/photo-1594787318286-3d835c1d207f?auto=format&fit=crop&w=800&q=80',
         extraImages: extraImgsStr,
         model3d: prod.model3d || 'https://modelviewer.dev/shared-assets/models/Astronaut.glb',
@@ -279,11 +278,14 @@ export const AdminConsole = () => {
       brand: data.brand || 'TRAXXAS',
       price: Number(data.price || 2999),
       mrp: Number(data.mrp || 3999),
-      rcCoins: Number(data.coinsRewardedOnPurchase !== undefined ? data.coinsRewardedOnPurchase : 100),
       allowCoinRedemption: Boolean(data.allowCoinRedemption !== false),
-      maxCoinsRedeemable: Number(data.maxCoinsRedeemable !== undefined ? data.maxCoinsRedeemable : 500),
-      coinDiscountAmount: calculatedRupeeDiscount,
-      coinsRewardedOnPurchase: Number(data.coinsRewardedOnPurchase !== undefined ? data.coinsRewardedOnPurchase : 100),
+      rewardCoinsEarned: Number(data.rewardCoinsEarned || 0),
+      coinsRewardedOnPurchase: Number(data.rewardCoinsEarned || 0),
+      rcCoins: Number(data.rewardCoinsEarned || 0),
+      coinsToDeduct: Number(data.coinsToDeduct || 0),
+      maxCoinsRedeemable: Number(data.coinsToDeduct || 0),
+      rupeeDiscountGiven: Number(data.rupeeDiscountGiven || 0),
+      coinDiscountAmount: Number(data.rupeeDiscountGiven || 0),
       discount: Math.round(((Number(data.mrp || 3999) - Number(data.price || 2999)) / Number(data.mrp || 3999)) * 100),
       image: data.image || 'https://images.unsplash.com/photo-1594787318286-3d835c1d207f?auto=format&fit=crop&w=800&q=80',
       images: [
@@ -1599,48 +1601,58 @@ export const AdminConsole = () => {
                   </label>
                 </div>
 
-                <div className="grid grid-cols-2 gap-3 pt-1">
-                  {/* Field 2: Max Spendable Coins Cap */}
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-1">
                   <div>
                     <label className="block text-[11px] font-black text-slate-800 mb-1">
-                      Max Spendable Coins Cap 🪙
+                      Coins to Deduct 🪙
                     </label>
                     <input
                       type="number"
                       min="0"
                       disabled={productFormModal.data.allowCoinRedemption === false}
-                      value={productFormModal.data.maxCoinsRedeemable ?? 500}
+                      value={productFormModal.data.coinsToDeduct || 0}
                       onChange={(e) => setProductFormModal(prev => ({
                         ...prev,
-                        data: { ...prev.data, maxCoinsRedeemable: Math.max(0, Number(e.target.value)) }
+                        data: { ...prev.data, coinsToDeduct: Math.max(0, Number(e.target.value)) }
                       }))}
                       className="w-full bg-white border border-slate-300 rounded-xl px-3 py-2 text-slate-900 font-bold text-xs focus:outline-none focus:border-amber-500 disabled:opacity-50"
-                      placeholder="e.g. 100"
+                      placeholder="e.g. 200"
                     />
-                    <p className="text-[10px] text-slate-600 mt-1 font-semibold">100 coins = ₹20 max discount cap per unit</p>
                   </div>
 
-                  {/* Field 3: Reward Coins Earned on Purchase */}
                   <div>
                     <label className="block text-[11px] font-black text-slate-800 mb-1">
-                      Reward Coins Earned on Purchase 🎁
+                      Rupee Discount (₹ Off)
                     </label>
                     <input
                       type="number"
                       min="0"
-                      value={productFormModal.data.coinsRewardedOnPurchase ?? productFormModal.data.rcCoins ?? 100}
+                      disabled={productFormModal.data.allowCoinRedemption === false}
+                      value={productFormModal.data.rupeeDiscountGiven || 0}
                       onChange={(e) => setProductFormModal(prev => ({
                         ...prev,
-                        data: {
-                          ...prev.data,
-                          coinsRewardedOnPurchase: Math.max(0, Number(e.target.value)),
-                          rcCoins: Math.max(0, Number(e.target.value))
-                        }
+                        data: { ...prev.data, rupeeDiscountGiven: Math.max(0, Number(e.target.value)) }
+                      }))}
+                      className="w-full bg-white border border-slate-300 rounded-xl px-3 py-2 text-emerald-700 font-black text-xs focus:outline-none focus:border-emerald-600 disabled:opacity-50"
+                      placeholder="e.g. 40"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-[11px] font-black text-slate-800 mb-1">
+                      Reward Coins Earned 🎁
+                    </label>
+                    <input
+                      type="number"
+                      min="0"
+                      value={productFormModal.data.rewardCoinsEarned || 0}
+                      onChange={(e) => setProductFormModal(prev => ({
+                        ...prev,
+                        data: { ...prev.data, rewardCoinsEarned: Math.max(0, Number(e.target.value)) }
                       }))}
                       className="w-full bg-white border border-slate-300 rounded-xl px-3 py-2 text-slate-900 font-bold text-xs focus:outline-none focus:border-emerald-600"
-                      placeholder="e.g. 50"
+                      placeholder="e.g. 100"
                     />
-                    <p className="text-[10px] text-slate-600 mt-1 font-semibold">Credited to customer wallet upon order delivery</p>
                   </div>
                 </div>
               </div>

@@ -1,5 +1,6 @@
 import React from 'react';
 import { useStore } from '../context/StoreContext';
+import { computeStackedCoinRedemption } from '../utils/coinUtils';
 import {
   X,
   Plus,
@@ -23,6 +24,10 @@ export const CartDrawer = () => {
     removeFromCart,
     cartSubtotal
   } = useStore();
+
+  const userCoins = user ? Number(user.rcCoins ?? user.permanentCoins ?? 0) : 0;
+  const coinStats = computeStackedCoinRedemption(cart || [], userCoins);
+  const finalCartPayable = Math.max(0, cartSubtotal - coinStats.totalRupeeDiscount);
 
   if (!isCartOpen) return null;
 
@@ -152,21 +157,58 @@ export const CartDrawer = () => {
               ))}
 
               {/* Bill Details Breakdown Section */}
-              <div className="bg-slate-50 border border-slate-200/80 rounded-2xl p-4 space-y-2 text-xs text-slate-600 font-semibold mt-4">
-                <div className="text-xs font-black text-slate-900 uppercase tracking-wider mb-1">
-                  Bill Details
+              <div className="bg-slate-50 border border-slate-200/80 rounded-2xl p-4 space-y-2.5 text-xs text-slate-600 font-semibold mt-4">
+                <div className="text-xs font-black text-slate-900 uppercase tracking-wider mb-1 flex items-center justify-between">
+                  <span>Bill Details</span>
+                  {userCoins > 0 && (
+                    <span className="text-[10px] font-bold text-amber-700 bg-amber-100 px-2 py-0.5 rounded-full border border-amber-200">
+                      🪙 Wallet: {userCoins} Coins
+                    </span>
+                  )}
                 </div>
+
                 <div className="flex justify-between">
                   <span>Item Total ({cart?.length} items):</span>
                   <span className="font-bold text-slate-900">₹{cartSubtotal.toLocaleString('en-IN')}</span>
                 </div>
+
                 <div className="flex justify-between">
                   <span>Packaging & Air Express Shipping:</span>
-                  <span className="font-bold text-emerald-700">FREE (Rs 0)</span>
+                  <span className="font-bold text-emerald-700">FREE (₹0)</span>
                 </div>
+
+                {/* Coin Savings & Stacking Breakdown */}
+                {coinStats.canRedeem && (
+                  <div className="p-3 bg-amber-50/80 border border-amber-200/90 rounded-xl space-y-1.5 text-[11px] my-1">
+                    <div className="font-black text-amber-950 flex items-center justify-between">
+                      <span className="flex items-center gap-1">🪙 RC Loyalty Savings Applied:</span>
+                      <span className="text-emerald-700 font-black text-xs">- ₹{coinStats.totalRupeeDiscount}</span>
+                    </div>
+
+                    <div className="text-[10px] text-amber-900/90 font-medium space-y-1 pt-1 border-t border-amber-200/60">
+                      {coinStats.itemizedBreakdown.map((item, idx) => (
+                        <div key={idx} className="flex justify-between items-center">
+                          <span className="truncate max-w-[180px]">• {item.title} ({item.units} {item.units === 1 ? 'unit' : 'units'}):</span>
+                          <span className="font-bold text-amber-950">{item.coinsDeducted} coins → -₹{item.rupeeDiscount}</span>
+                        </div>
+                      ))}
+                      <div className="text-[10px] font-extrabold text-amber-900 pt-1 flex justify-between">
+                        <span>Total Coins Burned: {coinStats.totalCoinsToBurn}</span>
+                        <span>Remaining Wallet: {coinStats.remainingWalletCoins}</span>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {userCoins > 0 && !coinStats.canRedeem && (
+                  <div className="p-2.5 bg-slate-100 border border-slate-200 rounded-xl text-[10px] text-slate-500 font-bold">
+                    💡 Wallet has {userCoins} coins. Min coins required for item discount not met.
+                  </div>
+                )}
+
                 <div className="flex justify-between text-sm font-black text-slate-900 pt-2 border-t border-slate-200">
                   <span>Total Payable:</span>
-                  <span className="text-emerald-700 text-base">₹{cartSubtotal.toLocaleString('en-IN')}</span>
+                  <span className="text-emerald-700 text-base">₹{finalCartPayable.toLocaleString('en-IN')}</span>
                 </div>
               </div>
             </div>
@@ -183,13 +225,15 @@ export const CartDrawer = () => {
                   <span>Subtotal:</span>
                   <span className="font-bold text-slate-900">₹{cartSubtotal.toLocaleString('en-IN')}</span>
                 </div>
-                <div className="flex justify-between">
-                  <span>Express Mysore Shipping:</span>
-                  <span className="font-bold text-emerald-700">FREE</span>
-                </div>
+                {coinStats.canRedeem && (
+                  <div className="flex justify-between text-emerald-700 font-bold">
+                    <span>RC Coins Savings ({coinStats.totalCoinsToBurn} coins):</span>
+                    <span>- ₹{coinStats.totalRupeeDiscount}</span>
+                  </div>
+                )}
                 <div className="flex justify-between text-sm font-black text-slate-900 pt-2 border-t border-slate-200">
                   <span>Total Amount:</span>
-                  <span className="text-emerald-700 text-base">₹{cartSubtotal.toLocaleString('en-IN')}</span>
+                  <span className="text-emerald-700 text-base">₹{finalCartPayable.toLocaleString('en-IN')}</span>
                 </div>
               </div>
 

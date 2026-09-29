@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useStore } from '../context/StoreContext';
 import { triggerCheckoutOrderConfirmation } from '../services/whatsappAutomations';
 import { getEffectiveUserCoins } from '../utils/formatters';
+import { computeStackedCoinRedemption } from '../utils/coinUtils';
 import { db } from '../services/firebase';
 import { doc, setDoc } from 'firebase/firestore';
 
@@ -146,40 +147,11 @@ export const CheckoutModal = () => {
   const userCoinStats = getEffectiveUserCoins(user || {});
   const userCoins = userCoinStats.total;
 
-  let totalCartCoinsToBurn = 0;
-  let totalCartRupeeDiscount = 0;
+  const stackedCoinStats = computeStackedCoinRedemption(cart || [], userCoins);
 
-  (cart || []).forEach(item => {
-    if (item.allowCoinRedemption === false) return;
-
-    const qty = Number(item.quantity || item.qty || 1);
-    const itemMaxCoins = item.maxCoinsRedeemable !== undefined ? Number(item.maxCoinsRedeemable) : 500;
-    const itemRupeeDiscount = item.coinDiscountAmount !== undefined 
-      ? Number(item.coinDiscountAmount) 
-      : Math.round(itemMaxCoins / 5);
-
-    totalCartCoinsToBurn += (itemMaxCoins * qty);
-    totalCartRupeeDiscount += (itemRupeeDiscount * qty);
-  });
-
-  const nonEligibleItemsCount = (cart || []).filter(item => item.allowCoinRedemption === false).length;
-  const eligibleForCoins = totalCartCoinsToBurn > 0;
-  const canRedeem = userCoins > 0 && eligibleForCoins;
-
-  // Calculate coins to burn & rupee discount (with balance pro-rating if balance < required)
-  let maxPossibleCoins = 0;
-  let maxPossibleRupee = 0;
-
-  if (canRedeem) {
-    if (userCoins >= totalCartCoinsToBurn) {
-      maxPossibleCoins = totalCartCoinsToBurn;
-      maxPossibleRupee = totalCartRupeeDiscount;
-    } else {
-      maxPossibleCoins = userCoins;
-      const ratio = userCoins / totalCartCoinsToBurn;
-      maxPossibleRupee = Math.round(totalCartRupeeDiscount * ratio);
-    }
-  }
+  const canRedeem = stackedCoinStats.canRedeem;
+  const maxPossibleCoins = stackedCoinStats.totalCoinsToBurn;
+  const maxPossibleRupee = stackedCoinStats.totalRupeeDiscount;
 
   const actualCoinsToRedeem = redeemCoinsChecked ? maxPossibleCoins : 0;
   const actualRupeeDiscount = redeemCoinsChecked ? maxPossibleRupee : 0;
@@ -766,6 +738,16 @@ export const CheckoutModal = () => {
                       : 'Redeem RC Coins'}
                   </span>
                 </label>
+                {redeemCoinsChecked && stackedCoinStats.itemizedBreakdown.length > 0 && (
+                  <div className="pl-7 pt-1 space-y-1 text-[10px] text-amber-900 font-semibold border-t border-amber-200/60 mt-1">
+                    {stackedCoinStats.itemizedBreakdown.map((item, idx) => (
+                      <div key={idx} className="flex justify-between items-center">
+                        <span className="truncate max-w-[180px]">• {item.title} ({item.units} {item.units === 1 ? 'unit' : 'units'}):</span>
+                        <span className="font-bold text-amber-950">{item.coinsDeducted} coins → -₹{item.rupeeDiscount}</span>
+                      </div>
+                    ))}
+                  </div>
+                )}
                 {!canRedeem && userCoins === 0 && (
                   <p className="text-[10px] text-amber-700 font-semibold pl-7">
                     Earn RC Coins on every purchase to unlock instant store credit discounts.
