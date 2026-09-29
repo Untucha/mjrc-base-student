@@ -66,26 +66,33 @@ export const BrandPageView = () => {
         </div>
 
         {/* Brand Banner Header */}
-        <div className="bg-gradient-to-br from-slate-900 via-slate-800 to-slate-950 text-white rounded-3xl p-6 sm:p-8 shadow-xl relative overflow-hidden">
+        <div className="bg-gradient-to-br from-slate-900 via-slate-800 to-slate-950 text-white rounded-3xl p-4 sm:p-5 md:p-8 shadow-xl relative overflow-hidden">
           <div className="absolute top-0 right-0 w-80 h-80 bg-emerald-500/10 rounded-full blur-3xl pointer-events-none" />
           
-          <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-6">
-            <div className="space-y-3">
+          <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-3 md:gap-6">
+            <div className="space-y-2 md:space-y-3">
               <div className="inline-flex items-center gap-2 bg-emerald-500/20 border border-emerald-500/40 text-emerald-400 font-black text-[10px] sm:text-xs px-3 py-1 rounded-full uppercase tracking-wider">
                 <Tag className="w-3.5 h-3.5" />
                 <span>Authorized Hobby Manufacturer</span>
               </div>
 
-              <h1 className="text-3xl sm:text-4xl font-black text-white tracking-tight uppercase">
+              <h1 className="text-2xl md:text-4xl font-black text-white tracking-tight uppercase">
                 {decodedBrand}
               </h1>
 
-              <p className="text-xs sm:text-sm text-slate-300 max-w-2xl font-medium leading-relaxed">
+              <p className="text-xs sm:text-sm text-slate-300 max-w-2xl font-medium leading-relaxed hidden sm:block">
                 Explore official {decodedBrand} high-performance RC vehicles, scale model replicas, and precision engineering. All items bench-tested at Mysore Central Hub.
               </p>
+
+              {/* Mobile Inline Pill Counter */}
+              <div className="md:hidden inline-flex items-center gap-2 px-3 py-1 bg-white/10 rounded-full text-xs font-semibold text-emerald-400 mt-2">
+                <span className="font-extrabold">{brandProducts.length}</span>
+                <span className="text-slate-300 font-medium">Models Available</span>
+              </div>
             </div>
 
-            <div className="bg-white/10 backdrop-blur-md border border-white/15 rounded-2xl p-4 text-center shrink-0 min-w-[160px]">
+            {/* Desktop Counter Block */}
+            <div className="hidden md:block bg-white/10 backdrop-blur-md border border-white/15 rounded-2xl p-4 text-center shrink-0 min-w-[160px]">
               <div className="text-2xl font-black text-emerald-400">{brandProducts.length}</div>
               <div className="text-[10px] font-extrabold uppercase tracking-wider text-slate-300">Models Available</div>
             </div>

@@ -41,6 +41,37 @@ export const ProductDetailModal = () => {
   const [isSpecsOpen, setIsSpecsOpen] = useState(false);
   const [activeMediaType, setActiveMediaType] = useState('image'); // 'image' | '3d' | 'video'
   const [activeImageIndex, setActiveImageIndex] = useState(0);
+  const [touchStartX, setTouchStartX] = useState(null);
+  const [touchEndX, setTouchEndX] = useState(null);
+
+  const handleTouchStart = (e) => {
+    if (activeMediaType !== 'image') return;
+    setTouchEndX(null);
+    if (e.targetTouches && e.targetTouches.length > 0) {
+      setTouchStartX(e.targetTouches[0].clientX);
+    }
+  };
+
+  const handleTouchMove = (e) => {
+    if (activeMediaType !== 'image') return;
+    if (e.targetTouches && e.targetTouches.length > 0) {
+      setTouchEndX(e.targetTouches[0].clientX);
+    }
+  };
+
+  const handleTouchEnd = () => {
+    if (activeMediaType !== 'image') return;
+    if (touchStartX === null || touchEndX === null) return;
+    const distance = touchStartX - touchEndX;
+    const minSwipeDistance = 40;
+    if (distance > minSwipeDistance && galleryImages.length > 1) {
+      setActiveImageIndex(prev => (prev + 1) % galleryImages.length);
+    } else if (distance < -minSwipeDistance && galleryImages.length > 1) {
+      setActiveImageIndex(prev => (prev - 1 + galleryImages.length) % galleryImages.length);
+    }
+    setTouchStartX(null);
+    setTouchEndX(null);
+  };
 
   const activeProductId = activeProductModal
     ? (typeof activeProductModal === 'string' ? activeProductModal : (activeProductModal.id || activeProductModal._id))
@@ -239,14 +270,19 @@ export const ProductDetailModal = () => {
           <div className="md:col-span-6 space-y-4 md:sticky md:top-0 md:self-start">
             
             {/* Main Media Viewport */}
-            <div className="relative h-72 sm:h-80 bg-slate-100 rounded-2xl overflow-hidden border border-slate-200 flex items-center justify-center">
+            <div
+              onTouchStart={handleTouchStart}
+              onTouchMove={handleTouchMove}
+              onTouchEnd={handleTouchEnd}
+              className="relative h-72 sm:h-80 bg-slate-100 rounded-2xl overflow-hidden border border-slate-200 flex items-center justify-center select-none touch-pan-y"
+            >
               
               {activeMediaType === 'image' && (
                 <>
                   <img
                     src={galleryImages[activeImageIndex] || product.image}
                     alt={product.title}
-                    className="w-full h-full object-cover rounded-xl"
+                    className="w-full h-full object-cover rounded-xl pointer-events-none"
                   />
                   <div className="absolute top-3 left-3 bg-white/90 backdrop-blur-md px-3 py-1 rounded-full text-[11px] font-extrabold text-amber-700 border border-amber-200 flex items-center gap-1 shadow-sm">
                     <Sparkles className="w-3 h-3 text-amber-500" /> High-Speed Bashing Ready
@@ -310,39 +346,9 @@ export const ProductDetailModal = () => {
                       : 'border-slate-200 opacity-70 hover:opacity-100'
                   }`}
                 >
-                  <img src={img} alt="Thumbnail" loading="lazy" decoding="async" className="w-full h-full object-cover" />
+                  <img src={img} alt={`Thumbnail ${idx + 1}`} loading="lazy" decoding="async" className="w-full h-full object-cover" />
                 </button>
               ))}
-
-              {/* 360° 3D Orbit Button */}
-              {show3d && (
-                <button
-                  onClick={() => setActiveMediaType('3d')}
-                  className={`h-14 px-3 rounded-xl border-2 text-xs font-black flex flex-col items-center justify-center gap-0.5 shrink-0 transition-all ${
-                    activeMediaType === '3d'
-                      ? 'border-emerald-500 bg-emerald-50 text-emerald-800 ring-2 ring-emerald-500/20'
-                      : 'border-slate-200 bg-slate-50 text-slate-700 hover:bg-slate-100'
-                  }`}
-                >
-                  <Box className="w-4 h-4 text-emerald-600" />
-                  <span className="text-[10px] uppercase tracking-wider">360° 3D</span>
-                </button>
-              )}
-
-              {/* Video Tab Button */}
-              {showVideo && (
-                <button
-                  onClick={() => setActiveMediaType('video')}
-                  className={`h-14 px-3 rounded-xl border-2 text-xs font-black flex flex-col items-center justify-center gap-0.5 shrink-0 transition-all ${
-                    activeMediaType === 'video'
-                      ? 'border-emerald-500 bg-emerald-50 text-emerald-800 ring-2 ring-emerald-500/20'
-                      : 'border-slate-200 bg-slate-50 text-slate-700 hover:bg-slate-100'
-                  }`}
-                >
-                  <Play className="w-4 h-4 text-rose-500 fill-rose-500" />
-                  <span className="text-[10px] uppercase tracking-wider">Video</span>
-                </button>
-              )}
 
             </div>
           </div>

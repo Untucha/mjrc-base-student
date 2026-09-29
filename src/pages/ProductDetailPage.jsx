@@ -36,6 +36,37 @@ export const ProductDetailPage = () => {
   const [activeImageIndex, setActiveImageIndex] = useState(0);
   const [isBoxOpen, setIsBoxOpen] = useState(true);
   const [isSpecsOpen, setIsSpecsOpen] = useState(false);
+  const [touchStartX, setTouchStartX] = useState(null);
+  const [touchEndX, setTouchEndX] = useState(null);
+
+  const handleTouchStart = (e) => {
+    if (activeMediaType !== 'image') return;
+    setTouchEndX(null);
+    if (e.targetTouches && e.targetTouches.length > 0) {
+      setTouchStartX(e.targetTouches[0].clientX);
+    }
+  };
+
+  const handleTouchMove = (e) => {
+    if (activeMediaType !== 'image') return;
+    if (e.targetTouches && e.targetTouches.length > 0) {
+      setTouchEndX(e.targetTouches[0].clientX);
+    }
+  };
+
+  const handleTouchEnd = () => {
+    if (activeMediaType !== 'image') return;
+    if (touchStartX === null || touchEndX === null) return;
+    const distance = touchStartX - touchEndX;
+    const minSwipeDistance = 40;
+    if (distance > minSwipeDistance && galleryImages.length > 1) {
+      setActiveImageIndex(prev => (prev + 1) % galleryImages.length);
+    } else if (distance < -minSwipeDistance && galleryImages.length > 1) {
+      setActiveImageIndex(prev => (prev - 1 + galleryImages.length) % galleryImages.length);
+    }
+    setTouchStartX(null);
+    setTouchEndX(null);
+  };
 
   const productList = (allProducts && allProducts.length > 0) ? allProducts : (products || []);
   const product = useMemo(() => {
@@ -310,14 +341,19 @@ export const ProductDetailPage = () => {
           </div>
           
           {/* Main Media Viewport */}
-          <div className="relative w-full aspect-square md:aspect-[4/3] rounded-2xl overflow-hidden bg-slate-100 border border-slate-200/80 shadow-xs flex items-center justify-center p-0">
+          <div
+            onTouchStart={handleTouchStart}
+            onTouchMove={handleTouchMove}
+            onTouchEnd={handleTouchEnd}
+            className="relative w-full aspect-square md:aspect-[4/3] rounded-2xl overflow-hidden bg-slate-100 border border-slate-200/80 shadow-xs flex items-center justify-center p-0 select-none touch-pan-y"
+          >
             
             {activeMediaType === 'image' && (
               <>
                 <img
                   src={galleryImages[activeImageIndex] || product.image}
                   alt={product.title}
-                  className="w-full h-full object-cover object-center block transition-all duration-300"
+                  className="w-full h-full object-cover object-center block transition-all duration-300 pointer-events-none"
                 />
                 <div className="absolute top-3.5 left-3.5 bg-white/90 backdrop-blur-md px-3 py-1 rounded-full text-xs font-extrabold text-amber-900 border border-amber-200 flex items-center gap-1.5 shadow-xs">
                   <Sparkles className="w-3.5 h-3.5 text-amber-500 fill-amber-400" /> High-Speed Scale Bashing Ready
@@ -381,39 +417,9 @@ export const ProductDetailPage = () => {
                     : 'border-slate-200 opacity-70 hover:opacity-100'
                 }`}
               >
-                <img src={img} alt="Thumbnail" loading="lazy" decoding="async" className="w-full h-full object-cover rounded-lg" />
+                <img src={img} alt={`Thumbnail ${idx + 1}`} loading="lazy" decoding="async" className="w-full h-full object-cover rounded-lg" />
               </button>
             ))}
-
-            {/* 360° 3D Orbit Button */}
-            {show3d && (
-              <button
-                onClick={() => setActiveMediaType('3d')}
-                className={`h-16 px-3.5 rounded-xl border-2 text-xs font-black flex flex-col items-center justify-center gap-0.5 shrink-0 transition-all ${
-                  activeMediaType === '3d'
-                    ? 'border-emerald-500 bg-emerald-50 text-emerald-800 ring-2 ring-emerald-500/20'
-                    : 'border-slate-200 bg-slate-50 text-slate-700 hover:bg-slate-100'
-                }`}
-              >
-                <Box className="w-5 h-5 text-emerald-600" />
-                <span className="text-[10px] uppercase tracking-wider">360° 3D</span>
-              </button>
-            )}
-
-            {/* Video Tab Button */}
-            {showVideo && (
-              <button
-                onClick={() => setActiveMediaType('video')}
-                className={`h-16 px-3.5 rounded-xl border-2 text-xs font-black flex flex-col items-center justify-center gap-0.5 shrink-0 transition-all ${
-                  activeMediaType === 'video'
-                    ? 'border-emerald-500 bg-emerald-50 text-emerald-800 ring-2 ring-emerald-500/20'
-                    : 'border-slate-200 bg-slate-50 text-slate-700 hover:bg-slate-100'
-                }`}
-              >
-                <Play className="w-5 h-5 text-rose-600 fill-rose-500" />
-                <span className="text-[10px] uppercase tracking-wider">Video</span>
-              </button>
-            )}
 
           </div>
 

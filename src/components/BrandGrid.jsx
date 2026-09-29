@@ -317,13 +317,14 @@ export const BrandGrid = () => {
                   sessionStorage.setItem('returnSection', 'shop-by-brand');
                 }
               }}
-              className="relative h-14 md:h-16 w-full flex items-center justify-center p-3 rounded-xl border border-slate-200/80 bg-white/70 shadow-sm hover:shadow-md transition-all hover:border-emerald-500/50 active:scale-95 group cursor-pointer select-none z-20 pointer-events-auto touch-manipulation overflow-hidden"
+              className="group h-16 sm:h-20 w-full flex items-center justify-center p-2.5 sm:p-3 rounded-2xl border border-slate-200/90 bg-white shadow-sm hover:shadow-md hover:border-emerald-500/40 transition-all duration-200 cursor-pointer select-none overflow-hidden z-20 pointer-events-auto touch-manipulation"
             >
               {logoUrl ? (
-                <img 
-                  src={logoUrl} 
-                  alt={brandName} 
-                  className="w-full h-full object-contain p-1 transition-transform duration-300 group-hover:scale-105 block"
+                <img
+                  src={logoUrl}
+                  alt={brandName}
+                  className="max-h-10 sm:max-h-12 w-auto max-w-[85%] object-contain select-none transition-transform duration-200 group-hover:scale-105 block"
+                  loading="lazy"
                   onError={(e) => {
                     e.currentTarget.style.display = 'none';
                     const fallbackEl = e.currentTarget.parentElement?.querySelector('.brand-text-fallback');
@@ -341,8 +342,8 @@ export const BrandGrid = () => {
               ) : null}
 
               {/* Text Fallback when no image/custom render or image load fails */}
-              <span 
-                className="brand-text-fallback font-extrabold text-slate-800 text-xs sm:text-sm text-center truncate px-1"
+              <span
+                className="brand-text-fallback font-extrabold text-xs sm:text-sm text-slate-800 tracking-wider uppercase text-center px-1"
                 style={{ display: logoUrl ? 'none' : (!logoUrl && (typeof brand?.renderLogo === 'function' || (matchedStaticBrand && typeof matchedStaticBrand.renderLogo === 'function'))) ? 'none' : 'block' }}
               >
                 {brandName}
