@@ -281,8 +281,6 @@ export const BrandGrid = () => {
           const brandId = typeof brand === 'string' ? `brand-${idx}` : (brand?.id || `brand-${idx}`);
           const logoUrl = (brand && typeof brand === 'object') ? (brand.logoUrl || brand.logo) : null;
           const matchedStaticBrand = typeof brand === 'string' ? (BRANDS || []).find(b => b && b.name && b.name.toLowerCase() === brand.toLowerCase()) : null;
-          const isSpeedScale = brandSubTab === 'speed_scale';
-
           return (
             <Link
               key={brandId}
@@ -293,17 +291,13 @@ export const BrandGrid = () => {
                   sessionStorage.setItem('returnSection', 'shop-by-brand');
                 }
               }}
-              className="relative w-full h-16 sm:h-18 rounded-xl bg-white border border-slate-200/80 shadow-sm hover:shadow-md transition-all flex items-center justify-center overflow-hidden p-1 hover:border-emerald-500/50 active:scale-95 group cursor-pointer select-none z-20 pointer-events-auto touch-manipulation"
+              className="relative h-14 md:h-16 w-full flex items-center justify-center p-3 rounded-xl border border-slate-200/80 bg-white/70 shadow-sm hover:shadow-md transition-all hover:border-emerald-500/50 active:scale-95 group cursor-pointer select-none z-20 pointer-events-auto touch-manipulation overflow-hidden"
             >
               {logoUrl ? (
                 <img 
                   src={logoUrl} 
                   alt={brandName} 
-                  className={
-                    isSpeedScale
-                      ? "w-full h-full object-contain p-1 transition-transform duration-300 group-hover:scale-105 block"
-                      : "w-full h-full object-cover object-center scale-105 group-hover:scale-110 transition-transform duration-300 block"
-                  }
+                  className="w-full h-full object-contain p-1 transition-transform duration-300 group-hover:scale-105 block"
                   onError={(e) => {
                     e.currentTarget.style.display = 'none';
                     const fallbackEl = e.currentTarget.parentElement?.querySelector('.brand-text-fallback');
