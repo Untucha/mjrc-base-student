@@ -3,7 +3,8 @@ import { triggerInstantWelcome, triggerOrderConfirmation, sendWhatsAppOrderNotif
 import { analyzeAndProcessShiprocketStatus, triggerAuthWelcomeAutomation, triggerCheckoutOrderConfirmation, triggerAdminManualBroadcast, sendWhatsAppNotification } from '../services/whatsappAutomations';
 import { INITIAL_PRODUCTS, CATEGORIES, BRANDS } from '../data/products';
 import { formatCoins, formatLogDate } from '../utils/formatters';
-import { db, auth } from '../services/firebase';
+import { db, auth, storage } from '../services/firebase';
+import { ref, deleteObject } from 'firebase/storage';
 import { onAuthStateChanged } from 'firebase/auth';
 import {
   collection,
@@ -2722,7 +2723,30 @@ export const StoreProvider = ({ children }) => {
   }, [purgeDummyReviews]);
 
   const deleteReview = useCallback(async (id) => {
-    setReviewsList(prev => (prev || []).filter(r => r.id !== id));
+    if (!id) return;
+    const targetReview = (reviewsList || []).find(r => String(r.id) === String(id));
+
+    // 1. Loop through review.mediaUrls and call Firebase Storage deleteObject()
+    if (targetReview && storage) {
+      const mediaList = Array.isArray(targetReview.mediaUrls)
+        ? targetReview.mediaUrls
+        : (targetReview.mediaUrl ? [targetReview.mediaUrl] : []);
+
+      for (const mediaUrl of mediaList) {
+        if (typeof mediaUrl === 'string' && (mediaUrl.includes('firebasestorage.googleapis.com') || mediaUrl.includes('reviews_media'))) {
+          try {
+            const fileRef = ref(storage, mediaUrl);
+            await deleteObject(fileRef);
+            console.log('[Firebase Storage] Permanently purged review media:', mediaUrl);
+          } catch (err) {
+            console.warn('[Firebase Storage] Delete media warning:', err);
+          }
+        }
+      }
+    }
+
+    // 2. Call Firestore deleteDoc()
+    setReviewsList(prev => (prev || []).filter(r => String(r.id) !== String(id)));
     if (db && id) {
       try {
         const docRef = doc(db, 'reviews', String(id));
@@ -2731,8 +2755,8 @@ export const StoreProvider = ({ children }) => {
         console.warn('[Firestore] deleteReview error:', err);
       }
     }
-    showToast('Review removed.');
-  }, [showToast]);
+    showToast('Review & media permanently purged.');
+  }, [reviewsList, showToast]);
 
   const handleShiprocketWebhook = useCallback((payload) => {
     if (!payload) return;

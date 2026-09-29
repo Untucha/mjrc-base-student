@@ -466,7 +466,8 @@ export async function analyzeAndProcessShiprocketStatus(order, newStatusOverride
 
   // Trigger 5: Delivered & Google Review Redirect (Shiprocket DELIVERED)
   else if (currentStatus === 'DELIVERED') {
-    const deliveryMsg = `🎉 *PACKAGE DELIVERED!* (Order #${orderId})\n\nHi *${customerName}*, your scale hobby RC machine has been safely delivered to your doorstep!\n\n⭐ *Unboxing Experience:* Rate us 5 Stars on Google Maps & claim 🪙 100 Bonus RC Coins!\n👉 *Tap to Review:* https://mjrcbase.com/review?order=${orderId}\n📍 *Direct Google Maps Review:* https://maps.app.goo.gl/mjrcbase-review\n\n💬 For technical support or replacement inquiries, contact us at +919686078395.\n\n⚡ Platform Engineered by ZoneX Growth Agency (https://zonexgrowth-agency.in)`;
+    const storeUrl = (typeof process !== 'undefined' && process.env?.STORE_URL) || import.meta.env?.VITE_STORE_URL || 'https://mjrcbase.com';
+    const deliveryMsg = `Hi ${customerName}! 🏁 Your MJ RC BASE order #${orderId} has arrived! Rate your gear, upload a quick unboxing clip, or request custom parts here: ${storeUrl}/review?orderId=${orderId}`;
 
     triggerResult = await sendAutomatedWhatsAppMessage({
       to: cleanPhone,

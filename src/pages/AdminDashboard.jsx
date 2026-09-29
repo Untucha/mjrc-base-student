@@ -4612,29 +4612,15 @@ export const AdminDashboard = () => {
                               </div>
                             )}
 
-                            {/* Custom Wishlist Demand Box (Sales Lead) */}
+                            {/* Custom Wishlist Demand Box */}
                             {rev.customProductWish && (
-                              <div className="bg-emerald-50 border border-emerald-200 rounded-xl p-3.5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
-                                <div>
-                                  <div className="text-[10px] font-black uppercase text-emerald-800 tracking-wider flex items-center gap-1">
-                                    <Sparkles className="w-3.5 h-3.5 text-emerald-600" /> Customer Custom Request / Wishlist:
-                                  </div>
-                                  <div className="text-xs font-extrabold text-slate-900 mt-0.5">
-                                    {rev.customProductWish}
-                                  </div>
+                              <div className="bg-emerald-50 border border-emerald-200 rounded-xl p-3.5 space-y-1">
+                                <div className="text-[10px] font-black uppercase text-emerald-800 tracking-wider flex items-center gap-1">
+                                  <Sparkles className="w-3.5 h-3.5 text-emerald-600" /> Customer Custom Request / Wishlist:
                                 </div>
-
-                                <a
-                                  href={`https://wa.me/${(phone || '919686078395').replace(/\D/g, '')}?text=${encodeURIComponent(
-                                    `Hi ${name}, regarding your requested RC model / spare parts wishlist (${rev.customProductWish}): we have update details from Mysore Central Hub!`
-                                  )}`}
-                                  target="_blank"
-                                  rel="noopener noreferrer"
-                                  className="inline-flex items-center gap-1.5 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-black px-3.5 py-2 rounded-xl shadow-xs transition active:scale-95 shrink-0"
-                                >
-                                  <MessageCircle className="w-4 h-4" />
-                                  <span>Chat on WhatsApp (Sales Lead)</span>
-                                </a>
+                                <div className="text-xs font-extrabold text-slate-900">
+                                  {rev.customProductWish}
+                                </div>
                               </div>
                             )}
 
@@ -4646,16 +4632,16 @@ export const AdminDashboard = () => {
                                 className="flex-1 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-black text-xs rounded-xl shadow-xs transition cursor-pointer active:scale-95 flex items-center justify-center gap-1.5"
                               >
                                 <CheckCircle2 className="w-4 h-4" />
-                                <span>Approve & Publish to Storefront</span>
+                                <span>[ Approve & Publish ]</span>
                               </button>
 
                               <button
                                 type="button"
-                                onClick={() => declineReview && declineReview(rev.id)}
+                                onClick={() => deleteReview && deleteReview(rev.id)}
                                 className="py-2.5 px-4 bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 font-extrabold text-xs rounded-xl transition cursor-pointer active:scale-95 flex items-center gap-1"
                               >
-                                <XCircle className="w-4 h-4 text-rose-600" />
-                                <span>Reject / Delete</span>
+                                <Trash2 className="w-4 h-4 text-rose-600" />
+                                <span>🗑️ Delete Review & Purge Media</span>
                               </button>
                             </div>
                           </div>
@@ -4846,10 +4832,11 @@ export const AdminDashboard = () => {
                             <button
                               type="button"
                               onClick={() => deleteReview && deleteReview(rev.id)}
-                              className="p-2 rounded-xl bg-rose-50 hover:bg-rose-100 text-rose-600 border border-rose-200 text-xs font-bold transition cursor-pointer"
-                              title="Delete Review"
+                              className="px-3.5 py-2 rounded-xl bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 text-xs font-extrabold transition cursor-pointer flex items-center gap-1.5 shrink-0"
+                              title="Delete Review & Purge Media"
                             >
-                              <Trash2 size={14} />
+                              <Trash2 size={14} className="text-rose-600" />
+                              <span>🗑️ Delete Review & Purge Media</span>
                             </button>
                           </div>
                         ))
