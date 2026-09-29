@@ -1,6 +1,6 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useStore, DEFAULT_TICKER_ITEMS } from '../context/StoreContext';
-import { ShieldCheck, Instagram, Rocket, Package, CheckCircle2 } from 'lucide-react';
+import { ShieldCheck, Instagram, Rocket, Package, CheckCircle2, X } from 'lucide-react';
 
 export const RunningTicker = ({ className = '' }) => {
   const { marqueeTicker } = useStore();
@@ -56,9 +56,11 @@ export const RunningTicker = ({ className = '' }) => {
 };
 
 export const TrustCards = ({ className = '' }) => {
+  const [activeTrustModal, setActiveTrustModal] = useState(null);
+
   const cards = [
     {
-      id: 'tb-1',
+      id: 'payments',
       icon: ShieldCheck,
       emoji: '🛡️',
       title: 'Zero-Risk Secure Payments',
@@ -67,7 +69,7 @@ export const TrustCards = ({ className = '' }) => {
       glow: 'from-emerald-500/10 via-teal-500/5 to-transparent'
     },
     {
-      id: 'tb-2',
+      id: 'instagram',
       icon: Instagram,
       emoji: '📸',
       title: 'Follow @mjrcbase on Instagram',
@@ -77,7 +79,7 @@ export const TrustCards = ({ className = '' }) => {
       glow: 'from-pink-500/10 via-purple-500/5 to-transparent'
     },
     {
-      id: 'tb-3',
+      id: 'shipping',
       icon: Rocket,
       emoji: '🚀',
       title: 'Express Shiprocket Logistics',
@@ -86,7 +88,7 @@ export const TrustCards = ({ className = '' }) => {
       glow: 'from-teal-500/10 via-emerald-500/5 to-transparent'
     },
     {
-      id: 'tb-4',
+      id: 'spares',
       icon: Package,
       emoji: '📦',
       title: 'Original Box Spares Included',
@@ -117,23 +119,27 @@ export const TrustCards = ({ className = '' }) => {
         </div>
       </div>
 
-      {/* BOTTOM GRID: Clean Glass Micro-Cards on Mobile */}
+      {/* BOTTOM GRID: Clean Glass Micro-Cards */}
       <div className="px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto">
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-2.5 sm:gap-5">
           {cards.map((card) => {
             const Icon = card.icon;
-            const CardTag = card.link ? 'a' : 'div';
-            const linkProps = card.link ? {
+            const isExternalLink = Boolean(card.link);
+            const CardTag = isExternalLink ? 'a' : 'button';
+            const linkProps = isExternalLink ? {
               href: card.link,
               target: '_blank',
               rel: 'noopener noreferrer'
-            } : {};
+            } : {
+              type: 'button',
+              onClick: () => setActiveTrustModal(card.id)
+            };
 
             return (
               <CardTag
                 key={card.id}
                 {...linkProps}
-                className="group relative bg-white backdrop-blur-md border border-slate-200/80 hover:border-emerald-500/50 p-3 sm:p-6 rounded-2xl sm:rounded-3xl transition-all duration-300 hover:scale-105 shadow-xs hover:shadow-md flex flex-col justify-between overflow-hidden cursor-pointer"
+                className="group relative bg-white backdrop-blur-md border border-slate-200/80 hover:border-emerald-500/50 p-3 sm:p-6 rounded-2xl sm:rounded-3xl transition-all duration-200 hover:-translate-y-1 hover:shadow-md active:scale-95 flex flex-col justify-between overflow-hidden cursor-pointer text-left w-full"
               >
                 {/* Dynamic Ambient Corner Gradient Reflection */}
                 <div className={`absolute -top-12 -right-12 w-28 h-28 bg-gradient-to-br ${card.glow} rounded-full blur-xl group-hover:scale-150 transition-transform duration-500 pointer-events-none`} />
@@ -163,7 +169,7 @@ export const TrustCards = ({ className = '' }) => {
                     <span className="truncate">{card.badge}</span>
                   </span>
                   <span className="text-[9px] sm:text-[10px] text-slate-400 group-hover:text-emerald-700 transition-colors shrink-0">
-                    Verified →
+                    {isExternalLink ? 'Visit →' : 'Learn More →'}
                   </span>
                 </div>
               </CardTag>
@@ -171,6 +177,104 @@ export const TrustCards = ({ className = '' }) => {
           })}
         </div>
       </div>
+
+      {/* POP-UP MODAL OVERLAY */}
+      {activeTrustModal && (
+        <div
+          onClick={() => setActiveTrustModal(null)}
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fadeIn"
+        >
+          <div
+            onClick={(e) => e.stopPropagation()}
+            className="max-w-md w-full rounded-2xl p-5 sm:p-6 bg-white text-slate-900 shadow-2xl relative space-y-4"
+          >
+            {/* Header with Close Button */}
+            <div className="flex items-center justify-between pb-3 border-b border-slate-100">
+              <div className="flex items-center gap-2.5">
+                <div className="w-10 h-10 rounded-xl bg-emerald-50 text-emerald-700 flex items-center justify-center border border-emerald-200">
+                  {activeTrustModal === 'payments' && <ShieldCheck className="w-5 h-5" />}
+                  {activeTrustModal === 'shipping' && <Rocket className="w-5 h-5" />}
+                  {activeTrustModal === 'spares' && <Package className="w-5 h-5" />}
+                </div>
+                <div>
+                  <h3 className="text-sm sm:text-base font-black text-slate-900">
+                    {activeTrustModal === 'payments' && '🔒 256-Bit Bank Grade Payment Security'}
+                    {activeTrustModal === 'shipping' && '⚡ Priority Shiprocket Logistics'}
+                    {activeTrustModal === 'spares' && '📦 Factory In-Box Spares & Accessories'}
+                  </h3>
+                  <span className="text-[10px] font-extrabold text-emerald-700 uppercase tracking-widest">
+                    MJ RC BASE Verified Standard
+                  </span>
+                </div>
+              </div>
+
+              <button
+                type="button"
+                onClick={() => setActiveTrustModal(null)}
+                className="p-1.5 rounded-full text-slate-400 hover:text-slate-900 hover:bg-slate-100 transition-colors cursor-pointer"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            {/* Modal Body per Category */}
+            <div className="text-xs sm:text-sm text-slate-700 font-medium leading-relaxed space-y-3">
+              {activeTrustModal === 'payments' && (
+                <>
+                  <p>
+                    All transactions on <strong>MJ RC BASE</strong> are processed through 256-bit SSL encrypted bank-grade payment gateways with zero storage of sensitive payment credentials.
+                  </p>
+                  <p>
+                    We support instant UPI (Google Pay, PhonePe, Paytm, BHIM), Credit Cards, Debit Cards, and Net Banking across all major Indian banks.
+                  </p>
+                  <div className="p-3 bg-emerald-50 border border-emerald-200 rounded-xl text-xs font-bold text-emerald-900">
+                    🛡️ Zero hidden charges. Instant Razorpay / Shiprocket SSL encrypted checkout.
+                  </div>
+                </>
+              )}
+
+              {activeTrustModal === 'shipping' && (
+                <>
+                  <p>
+                    Every scale RC vehicle and spare part is 100% bench-tested and packed at our <strong>Mysore Central Hub</strong> before dispatch.
+                  </p>
+                  <p>
+                    Orders are shipped via Shiprocket premium logistics partners (BlueDart, Delhivery, DTDC) with live SMS and WhatsApp tracking notifications sent straight to your phone.
+                  </p>
+                  <div className="p-3 bg-teal-50 border border-teal-200 rounded-xl text-xs font-bold text-teal-900">
+                    🚀 Dispatch within 24 hours. Real-time AWB tracking link upon handover.
+                  </div>
+                </>
+              )}
+
+              {activeTrustModal === 'spares' && (
+                <>
+                  <p>
+                    Spare accessories, batteries, extra gears, or tools vary by manufacturer and model. Each kit strictly includes genuine factory-packed box contents as provided by the official brand.
+                  </p>
+                  <p>
+                    Inspect the technical specs tab on any product page for the full itemized list of included radio transmitters, batteries, chargers, and spare parts.
+                  </p>
+                  <div className="p-3 bg-amber-50 border border-amber-200 rounded-xl text-xs font-bold text-amber-900">
+                    📦 Guaranteed 100% original manufacturer sealed box contents.
+                  </div>
+                </>
+              )}
+            </div>
+
+            {/* Footer Close Button */}
+            <div className="pt-3 border-t border-slate-100 flex justify-end">
+              <button
+                type="button"
+                onClick={() => setActiveTrustModal(null)}
+                className="w-full sm:w-auto bg-slate-900 hover:bg-slate-800 text-white font-extrabold text-xs px-6 py-2.5 rounded-xl transition cursor-pointer"
+              >
+                Close Info
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
