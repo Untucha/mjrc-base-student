@@ -119,7 +119,7 @@ export const ProductCard = ({ product, onMoveToCart, showMoveToCart = false }) =
           {/* Coins & Special Exempt Badges */}
           {(() => {
             const rules = getProductCoinRules(product);
-            if (!rules.allowCoinRedemption) {
+            if (!rules?.allowCoinRedemption) {
               return (
                 <div className="mt-1.5 inline-flex items-center gap-1 text-[9px] sm:text-[10px] font-bold text-rose-800 bg-rose-50 border border-rose-200 px-1.5 sm:px-2 py-0.5 rounded-md">
                   <span>Special Item - Coin Discount Exempt</span>
@@ -130,9 +130,9 @@ export const ProductCard = ({ product, onMoveToCart, showMoveToCart = false }) =
               <div className="mt-1.5 flex flex-wrap items-center gap-1 text-[9px] sm:text-[10px] font-bold">
                 <div className="inline-flex items-center gap-1 text-amber-900 bg-amber-50 border border-amber-200 px-1.5 sm:px-2 py-0.5 rounded-md">
                   <Coins className="w-3 h-3 text-amber-500" />
-                  <span>Earn {rules.rewardCoinsEarned || 0} RC Coins on delivery</span>
+                  <span>Earn {rules?.rewardCoinsEarned || 0} RC Coins on delivery</span>
                 </div>
-                {rules.coinsToDeduct > 0 && rules.rupeeDiscountGiven > 0 && (
+                {(rules?.coinsToDeduct || 0) > 0 && (rules?.rupeeDiscountGiven || 0) > 0 && (
                   <div className="inline-flex items-center gap-1 text-emerald-800 bg-emerald-50 border border-emerald-200 px-1.5 sm:px-2 py-0.5 rounded-md">
                     <span>Redeem {rules.coinsToDeduct} coins for ₹{rules.rupeeDiscountGiven} OFF</span>
                   </div>

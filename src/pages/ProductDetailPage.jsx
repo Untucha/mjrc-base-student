@@ -731,8 +731,8 @@ export const ProductDetailPage = () => {
                       🪙
                     </div>
                     <div>
-                      <div className="font-black text-amber-950">Earn {rules.rewardCoinsEarned || 0} RC Coins on delivery</div>
-                      {rules.allowCoinRedemption && rules.coinsToDeduct > 0 && rules.rupeeDiscountGiven > 0 && (
+                      <div className="font-black text-amber-950">Earn {rules?.rewardCoinsEarned || 0} RC Coins on delivery</div>
+                      {rules?.allowCoinRedemption && (rules?.coinsToDeduct || 0) > 0 && (rules?.rupeeDiscountGiven || 0) > 0 && (
                         <div className="text-[11px] font-extrabold text-emerald-800 mt-0.5">
                           Redeem {rules.coinsToDeduct} coins for ₹{rules.rupeeDiscountGiven} OFF
                         </div>

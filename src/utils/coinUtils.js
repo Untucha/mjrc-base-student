@@ -3,24 +3,24 @@
  */
 
 export function getProductCoinRules(product = {}) {
-  const allowCoinRedemption = product.allowCoinRedemption !== false;
+  const allowCoinRedemption = product?.allowCoinRedemption !== false;
 
   const rewardCoinsEarned = Number(
-    product.rewardCoinsEarned ??
-    product.coinsRewardedOnPurchase ??
-    product.rcCoins ??
+    product?.rewardCoinsEarned ??
+    product?.coinsRewardedOnPurchase ??
+    product?.rcCoins ??
     0
   );
 
   const coinsToDeduct = Number(
-    product.coinsToDeduct ??
-    product.maxCoinsRedeemable ??
+    product?.coinsToDeduct ??
+    product?.maxCoinsRedeemable ??
     0
   );
 
   const rupeeDiscountGiven = Number(
-    product.rupeeDiscountGiven ??
-    product.coinDiscountAmount ??
+    product?.rupeeDiscountGiven ??
+    product?.coinDiscountAmount ??
     0
   );
 
@@ -37,16 +37,17 @@ export function computeStackedCoinRedemption(cartItems = [], userWalletCoins = 0
 
   const unitOffers = [];
   (cartItems || []).forEach(item => {
+    if (!item) return;
     const rules = getProductCoinRules(item);
     if (!rules.allowCoinRedemption) return;
 
-    const qty = Math.max(1, Number(item.quantity || item.qty || 1));
+    const qty = Math.max(1, Number(item?.quantity || item?.qty || 1));
     if (rules.coinsToDeduct > 0 && rules.rupeeDiscountGiven > 0) {
       for (let i = 0; i < qty; i++) {
         unitOffers.push({
-          cartItemId: item.cartItemId || item.id,
-          productId: item.id || item._id,
-          title: item.title || item.name || 'RC Machine',
+          cartItemId: item?.cartItemId || item?.id || Math.random(),
+          productId: item?.id || item?._id || Math.random(),
+          title: item?.title || item?.name || 'RC Machine',
           coinsToDeduct: rules.coinsToDeduct,
           rupeeDiscountGiven: rules.rupeeDiscountGiven,
           ratio: rules.rupeeDiscountGiven / rules.coinsToDeduct
@@ -55,8 +56,8 @@ export function computeStackedCoinRedemption(cartItems = [], userWalletCoins = 0
     }
   });
 
-  const totalCartCoinsRequired = unitOffers.reduce((sum, u) => sum + u.coinsToDeduct, 0);
-  const totalCartRupeeDiscountAvailable = unitOffers.reduce((sum, u) => sum + u.rupeeDiscountGiven, 0);
+  const totalCartCoinsRequired = unitOffers.reduce((sum, u) => sum + (u.coinsToDeduct || 0), 0);
+  const totalCartRupeeDiscountAvailable = unitOffers.reduce((sum, u) => sum + (u.rupeeDiscountGiven || 0), 0);
 
   if (unitOffers.length === 0 || walletCoins <= 0) {
     return {

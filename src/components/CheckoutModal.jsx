@@ -145,18 +145,22 @@ export const CheckoutModal = () => {
   // Loyalty Redemption Checkbox State & Per-Product Coin Cap Calculation
   const [redeemCoinsChecked, setRedeemCoinsChecked] = useState(false);
   const userCoinStats = getEffectiveUserCoins(user || {});
-  const userCoins = userCoinStats.total;
+  const userCoins = userCoinStats?.total || 0;
 
   const stackedCoinStats = computeStackedCoinRedemption(cart || [], userCoins);
 
-  const canRedeem = stackedCoinStats.canRedeem;
-  const maxPossibleCoins = stackedCoinStats.totalCoinsToBurn;
-  const maxPossibleRupee = stackedCoinStats.totalRupeeDiscount;
+  const eligibleItems = (cart || []).filter(item => item && item.allowCoinRedemption !== false);
+  const eligibleForCoins = eligibleItems.length > 0 && (stackedCoinStats?.totalCartCoinsRequired || 0) > 0;
+  const nonEligibleItemsCount = (cart || []).filter(item => item && item.allowCoinRedemption === false).length;
+
+  const canRedeem = Boolean(stackedCoinStats?.canRedeem);
+  const maxPossibleCoins = stackedCoinStats?.totalCoinsToBurn || 0;
+  const maxPossibleRupee = stackedCoinStats?.totalRupeeDiscount || 0;
 
   const actualCoinsToRedeem = redeemCoinsChecked ? maxPossibleCoins : 0;
   const actualRupeeDiscount = redeemCoinsChecked ? maxPossibleRupee : 0;
   const discountAmount = actualRupeeDiscount;
-  const finalPayableTotal = Math.max(0, cartSubtotal - discountAmount);
+  const finalPayableTotal = Math.max(0, (cartSubtotal || 0) - discountAmount);
 
   // Payment method selector: 'upi' | 'shiprocket' | 'cod'
   const [paymentMethod, setPaymentMethod] = useState('upi');
