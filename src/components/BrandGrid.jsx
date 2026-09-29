@@ -208,6 +208,20 @@ const BRANDS = [
         AXIAL
       </div>
     )
+  },
+  {
+    id: 'huina',
+    name: 'Huina',
+    brandGroup: 'crawler',
+    isCrawlerBrand: true,
+    renderLogo: () => (
+      <div className="flex items-center gap-1.5 font-black text-amber-700 text-xs sm:text-sm">
+        <div className="w-5 h-5 bg-amber-500 text-slate-950 flex items-center justify-center font-black rounded-xs shadow-2xs text-[10px]">
+          HN
+        </div>
+        <span className="tracking-wider text-slate-900 font-mono">HUINA</span>
+      </div>
+    )
   }
 ];
 
@@ -217,7 +231,7 @@ export const BrandGrid = () => {
 
   const sourceBrands = Array.isArray(brandsList) ? brandsList : BRANDS;
 
-  const CRAWLER_NAMES = new Set(['FMS', 'RGT 4WD', 'RGT', 'JJR/C', 'JJRC', 'HB TOYS', 'MN MODEL', 'TRAXXAS', 'AXIAL']);
+  const CRAWLER_NAMES = new Set(['FMS', 'RGT 4WD', 'RGT', 'JJR/C', 'JJRC', 'HB TOYS', 'MN MODEL', 'TRAXXAS', 'AXIAL', 'HUINA', 'HUINA RC']);
 
   const getBrandGroup = (brand) => {
     if (typeof brand === 'object' && brand.brandGroup) return brand.brandGroup;
@@ -228,8 +242,20 @@ export const BrandGrid = () => {
 
   const visibleBrands = sourceBrands.filter((brand) => {
     const brandName = typeof brand === 'string' ? brand : (brand?.name || '');
-    if (typeof brand === 'object' && brand.isVisible === false) return false;
-    if (brandVisibility && brandVisibility[brandName] === false) return false;
+    const cleanName = brandName.toLowerCase().trim();
+    if (typeof brand === 'object') {
+      if (brand.isVisible === false || brand.isActive === false || brand.isHidden === true) return false;
+    }
+    if (brandVisibility) {
+      if (
+        brandVisibility[brandName] === false ||
+        brandVisibility[cleanName] === false ||
+        brandVisibility[brandName.toLowerCase()] === false ||
+        brandVisibility[brandName.toUpperCase()] === false
+      ) {
+        return false;
+      }
+    }
 
     const bGroup = getBrandGroup(brand);
     return bGroup === brandSubTab;

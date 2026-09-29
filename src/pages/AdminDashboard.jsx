@@ -4131,7 +4131,7 @@ export const AdminDashboard = () => {
 
         {/* HUB 6: SHOP BY BRAND (ISOLATED DUAL BRAND POOLS & VISIBILITY TOGGLE) */}
         {activeTab === 'brands' && (() => {
-          const CRAWLER_NAMES = new Set(['FMS', 'RGT 4WD', 'RGT', 'JJR/C', 'JJRC', 'HB TOYS', 'MN MODEL', 'TRAXXAS', 'AXIAL']);
+          const CRAWLER_NAMES = new Set(['FMS', 'RGT 4WD', 'RGT', 'JJR/C', 'JJRC', 'HB TOYS', 'MN MODEL', 'TRAXXAS', 'AXIAL', 'HUINA', 'HUINA RC']);
           const rawBrandsList = Array.isArray(brandsList) ? brandsList : OFFICIAL_18_BRANDS.map(name => ({ name }));
 
           const getBrandGroup = (b) => {
@@ -4226,7 +4226,9 @@ export const AdminDashboard = () => {
               {filteredAdminBrands.map((brandObj, idx) => {
               const brandName = typeof brandObj === 'string' ? brandObj : (brandObj.name || `Brand #${idx + 1}`);
               const brandLogo = typeof brandObj === 'object' ? (brandObj.logoUrl || brandObj.logo) : null;
-              const isBVisible = typeof brandObj === 'object' ? brandObj.isVisible !== false : !(brandVisibility && brandVisibility[brandName] === false);
+              const isBVisible = typeof brandObj === 'object'
+                ? (brandObj.isVisible !== false && brandObj.isActive !== false && !brandObj.isHidden)
+                : !(brandVisibility && (brandVisibility[brandName] === false || brandVisibility[brandName.toLowerCase()] === false));
               const brandClean = brandName.toLowerCase().replace(/[\s\-_]/g, '');
               const brandProds = displayProducts.filter(p => {
                 const pBrandClean = (p.brand || '').toLowerCase().replace(/[\s\-_]/g, '');
@@ -4276,7 +4278,7 @@ export const AdminDashboard = () => {
 
                       <button
                         type="button"
-                        onClick={() => toggleBrandVisibility && toggleBrandVisibility(brandName)}
+                        onClick={() => toggleBrandVisibility && toggleBrandVisibility(typeof brandObj === 'object' ? (brandObj.id || brandName) : brandName)}
                         className={`px-3 py-1.5 rounded-xl text-xs font-black flex items-center gap-1.5 border transition cursor-pointer ${
                           isBVisible
                             ? 'bg-emerald-50 text-emerald-800 border-emerald-200 hover:bg-emerald-100'

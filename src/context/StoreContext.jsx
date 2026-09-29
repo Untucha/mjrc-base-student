@@ -126,7 +126,10 @@ const DEFAULT_BRAND_VISIBILITY = {
   'TRAXXAS': true,
   'AXIAL': true,
   'ARRMA': true,
-  'KYOSHO': true
+  'KYOSHO': true,
+  'HUINA': true,
+  'Huina': true,
+  'huina': true
 };
 
 export const DEFAULT_CATEGORIES = [
@@ -139,28 +142,29 @@ export const DEFAULT_CATEGORIES = [
 ];
 
 export const DEFAULT_BRANDS = [
-  'HOT WHEELS', 'WLtoys', 'FMS', 'Bburago', 'RLAARLO', 'MJX R/C', 'HStar', 'CCA AUTO', 'MINI GT', 'JIABAILE', 'RGT', 'JJRC', 'HB TOYS', 'MN MODEL', 'TRAXXAS', 'AXIAL', 'ARRMA', 'KYOSHO'
+  'HOT WHEELS', 'WLtoys', 'FMS', 'Bburago', 'RLAARLO', 'MJX R/C', 'HStar', 'CCA AUTO', 'MINI GT', 'JIABAILE', 'RGT', 'JJRC', 'HB TOYS', 'MN MODEL', 'TRAXXAS', 'AXIAL', 'ARRMA', 'KYOSHO', 'Huina'
 ];
 
 export const DEFAULT_OFFICIAL_BRANDS = [
-  { id: 'hotwheels', name: 'HotWheels', logoUrl: 'https://upload.wikimedia.org/wikipedia/commons/8/82/Hot_Wheels_logo.svg', isVisible: true, brandGroup: 'speed_scale', isCrawlerBrand: false, sortOrder: 1 },
-  { id: 'wltoys', name: 'WLtoys', logoUrl: '', isVisible: true, brandGroup: 'speed_scale', isCrawlerBrand: false, sortOrder: 2 },
-  { id: 'fms', name: 'FMS', logoUrl: '', isVisible: true, brandGroup: 'crawler', isCrawlerBrand: true, sortOrder: 3 },
-  { id: 'bburago', name: 'Bburago', logoUrl: 'https://upload.wikimedia.org/wikipedia/commons/8/87/Bburago_logo.svg', isVisible: true, brandGroup: 'speed_scale', isCrawlerBrand: false, sortOrder: 4 },
-  { id: 'rlaarlo', name: 'RLAARLO', logoUrl: '', isVisible: true, brandGroup: 'speed_scale', isCrawlerBrand: false, sortOrder: 5 },
-  { id: 'mjx-rc', name: 'MJX R/C', logoUrl: '', isVisible: true, brandGroup: 'speed_scale', isCrawlerBrand: false, sortOrder: 6 },
-  { id: 'hstar', name: 'HStar', logoUrl: '', isVisible: true, brandGroup: 'speed_scale', isCrawlerBrand: false, sortOrder: 7 },
-  { id: 'cca-auto', name: 'CCA AUTO', logoUrl: '', isVisible: true, brandGroup: 'speed_scale', isCrawlerBrand: false, sortOrder: 8 },
-  { id: 'mini-gt', name: '1:64 MINI GT', logoUrl: '', isVisible: true, brandGroup: 'speed_scale', isCrawlerBrand: false, sortOrder: 9 },
-  { id: 'jiabaile', name: 'JIABAILE', logoUrl: '', isVisible: true, brandGroup: 'speed_scale', isCrawlerBrand: false, sortOrder: 10 },
-  { id: 'rgt-4wd', name: 'RGT 4WD', logoUrl: '', isVisible: true, brandGroup: 'crawler', isCrawlerBrand: true, sortOrder: 11 },
-  { id: 'jjrc', name: 'JJR/C', logoUrl: '', isVisible: true, brandGroup: 'crawler', isCrawlerBrand: true, sortOrder: 12 },
-  { id: 'hb-toys', name: 'HB TOYS', logoUrl: '', isVisible: true, brandGroup: 'crawler', isCrawlerBrand: true, sortOrder: 13 },
-  { id: 'mn-model', name: 'MN MODEL', logoUrl: '', isVisible: true, brandGroup: 'crawler', isCrawlerBrand: true, sortOrder: 14 },
-  { id: 'traxxas', name: 'TRAXXAS', logoUrl: 'https://upload.wikimedia.org/wikipedia/commons/e/e5/Traxxas_logo.svg', isVisible: true, brandGroup: 'crawler', isCrawlerBrand: true, sortOrder: 15 },
-  { id: 'axial', name: 'AXIAL', logoUrl: 'https://upload.wikimedia.org/wikipedia/commons/4/4e/Axial_R-C_logo.png', isVisible: true, brandGroup: 'crawler', isCrawlerBrand: true, sortOrder: 16 },
-  { id: 'arrma', name: 'ARRMA', logoUrl: '', isVisible: true, brandGroup: 'speed_scale', isCrawlerBrand: false, sortOrder: 17 },
-  { id: 'kyosho', name: 'KYOSHO', logoUrl: 'https://upload.wikimedia.org/wikipedia/commons/8/84/Kyosho_logo.svg', isVisible: true, brandGroup: 'speed_scale', isCrawlerBrand: false, sortOrder: 18 }
+  { id: 'hotwheels', name: 'HotWheels', logoUrl: 'https://upload.wikimedia.org/wikipedia/commons/8/82/Hot_Wheels_logo.svg', isVisible: true, isActive: true, isHidden: false, brandGroup: 'speed_scale', isCrawlerBrand: false, sortOrder: 1 },
+  { id: 'wltoys', name: 'WLtoys', logoUrl: '', isVisible: true, isActive: true, isHidden: false, brandGroup: 'speed_scale', isCrawlerBrand: false, sortOrder: 2 },
+  { id: 'fms', name: 'FMS', logoUrl: '', isVisible: true, isActive: true, isHidden: false, brandGroup: 'crawler', isCrawlerBrand: true, sortOrder: 3 },
+  { id: 'bburago', name: 'Bburago', logoUrl: 'https://upload.wikimedia.org/wikipedia/commons/8/87/Bburago_logo.svg', isVisible: true, isActive: true, isHidden: false, brandGroup: 'speed_scale', isCrawlerBrand: false, sortOrder: 4 },
+  { id: 'rlaarlo', name: 'RLAARLO', logoUrl: '', isVisible: true, isActive: true, isHidden: false, brandGroup: 'speed_scale', isCrawlerBrand: false, sortOrder: 5 },
+  { id: 'mjx-rc', name: 'MJX R/C', logoUrl: '', isVisible: true, isActive: true, isHidden: false, brandGroup: 'speed_scale', isCrawlerBrand: false, sortOrder: 6 },
+  { id: 'hstar', name: 'HStar', logoUrl: '', isVisible: true, isActive: true, isHidden: false, brandGroup: 'speed_scale', isCrawlerBrand: false, sortOrder: 7 },
+  { id: 'cca-auto', name: 'CCA AUTO', logoUrl: '', isVisible: true, isActive: true, isHidden: false, brandGroup: 'speed_scale', isCrawlerBrand: false, sortOrder: 8 },
+  { id: 'mini-gt', name: '1:64 MINI GT', logoUrl: '', isVisible: true, isActive: true, isHidden: false, brandGroup: 'speed_scale', isCrawlerBrand: false, sortOrder: 9 },
+  { id: 'jiabaile', name: 'JIABAILE', logoUrl: '', isVisible: true, isActive: true, isHidden: false, brandGroup: 'speed_scale', isCrawlerBrand: false, sortOrder: 10 },
+  { id: 'rgt-4wd', name: 'RGT 4WD', logoUrl: '', isVisible: true, isActive: true, isHidden: false, brandGroup: 'crawler', isCrawlerBrand: true, sortOrder: 11 },
+  { id: 'jjrc', name: 'JJR/C', logoUrl: '', isVisible: true, isActive: true, isHidden: false, brandGroup: 'crawler', isCrawlerBrand: true, sortOrder: 12 },
+  { id: 'hb-toys', name: 'HB TOYS', logoUrl: '', isVisible: true, isActive: true, isHidden: false, brandGroup: 'crawler', isCrawlerBrand: true, sortOrder: 13 },
+  { id: 'mn-model', name: 'MN MODEL', logoUrl: '', isVisible: true, isActive: true, isHidden: false, brandGroup: 'crawler', isCrawlerBrand: true, sortOrder: 14 },
+  { id: 'traxxas', name: 'TRAXXAS', logoUrl: 'https://upload.wikimedia.org/wikipedia/commons/e/e5/Traxxas_logo.svg', isVisible: true, isActive: true, isHidden: false, brandGroup: 'crawler', isCrawlerBrand: true, sortOrder: 15 },
+  { id: 'axial', name: 'AXIAL', logoUrl: 'https://upload.wikimedia.org/wikipedia/commons/4/4e/Axial_R-C_logo.png', isVisible: true, isActive: true, isHidden: false, brandGroup: 'crawler', isCrawlerBrand: true, sortOrder: 16 },
+  { id: 'arrma', name: 'ARRMA', logoUrl: '', isVisible: true, isActive: true, isHidden: false, brandGroup: 'speed_scale', isCrawlerBrand: false, sortOrder: 17 },
+  { id: 'kyosho', name: 'KYOSHO', logoUrl: 'https://upload.wikimedia.org/wikipedia/commons/8/84/Kyosho_logo.svg', isVisible: true, isActive: true, isHidden: false, brandGroup: 'speed_scale', isCrawlerBrand: false, sortOrder: 18 },
+  { id: 'huina', name: 'Huina', logoUrl: '', isVisible: true, isActive: true, isHidden: false, brandGroup: 'crawler', isCrawlerBrand: true, sortOrder: 19 }
 ];
 
 export const DEFAULT_TICKER_ITEMS = [
@@ -964,11 +968,14 @@ export const StoreProvider = ({ children }) => {
     if (!brandData || !brandData.name) return;
     const brandId = brandData.id || brandData.name.toLowerCase().trim().replace(/[^a-z0-9]/g, '-');
     const group = brandData.brandGroup || (brandData.isCrawlerBrand ? 'crawler' : 'speed_scale');
+    const isVis = brandData.isVisible !== false;
     const payload = {
       id: brandId,
       name: brandData.name.trim(),
       logoUrl: (brandData.logoUrl || '').trim(),
-      isVisible: brandData.isVisible !== false,
+      isVisible: isVis,
+      isActive: isVis,
+      isHidden: !isVis,
       brandGroup: group,
       isCrawlerBrand: group === 'crawler',
       sortOrder: Number(brandData.sortOrder || 0),
@@ -1217,28 +1224,71 @@ export const StoreProvider = ({ children }) => {
     localStorage.setItem('mj_custom_scale_categories', JSON.stringify(customScaleCategories));
   }, [customScaleCategories]);
 
-  const toggleBrandVisibility = useCallback(async (brandName) => {
-    if (!brandName) return;
-    const brandClean = brandName.toLowerCase().replace(/[\s\-_]/g, '');
+  const toggleBrandVisibility = useCallback(async (brandIdentifier) => {
+    if (!brandIdentifier) return;
+    const rawName = typeof brandIdentifier === 'object' ? (brandIdentifier.name || brandIdentifier.id || '') : String(brandIdentifier);
+    const brandClean = rawName.toLowerCase().trim().replace(/[\s\-_]/g, '');
+
+    setBrandsList(prev => {
+      const target = prev.find(b => {
+        if (!b) return false;
+        const bId = String(b.id || '').toLowerCase().trim();
+        const bName = String(b.name || '').toLowerCase().trim();
+        return bId === brandClean || bName === brandClean || bName.replace(/[\s\-_]/g, '') === brandClean || bId.replace(/[\s\-_]/g, '') === brandClean;
+      });
+
+      const currentStatus = target ? (target.isVisible !== false && target.isActive !== false && !target.isHidden) : true;
+      const nextStatus = !currentStatus;
+      const targetId = target ? target.id : (brandClean || 'huina');
+
+      // Write to Firestore brands/{targetId} with exact boolean fields
+      setDoc(doc(db, 'brands', targetId), {
+        name: target?.name || rawName,
+        isVisible: nextStatus,
+        isActive: nextStatus,
+        isHidden: !nextStatus
+      }, { merge: true }).catch(err => {
+        console.error('[Firestore] brand toggle error:', err);
+      });
+
+      if (target) {
+        return prev.map(b => (b.id === target.id || (b.name && b.name.toLowerCase().replace(/[\s\-_]/g, '') === brandClean)) ? {
+          ...b,
+          isVisible: nextStatus,
+          isActive: nextStatus,
+          isHidden: !nextStatus
+        } : b);
+      } else {
+        return [...prev, {
+          id: targetId,
+          name: rawName,
+          isVisible: nextStatus,
+          isActive: nextStatus,
+          isHidden: !nextStatus,
+          brandGroup: 'crawler',
+          isCrawlerBrand: true
+        }];
+      }
+    });
 
     setBrandVisibility(prev => {
-      const current = prev[brandName] !== false;
-      const updated = { ...prev, [brandName]: !current };
+      const isCurrentlyActive = prev[rawName] !== false && prev[rawName.toLowerCase()] !== false && prev[brandClean] !== false;
+      const newStatus = !isCurrentlyActive;
+      const updated = {
+        ...prev,
+        [rawName]: newStatus,
+        [rawName.toLowerCase()]: newStatus,
+        [rawName.toUpperCase()]: newStatus,
+        [brandClean]: newStatus,
+        'Huina': newStatus,
+        'huina': newStatus,
+        'HUINA': newStatus
+      };
       try { localStorage.setItem('mj_brand_visibility', JSON.stringify(updated)); } catch (e) {}
       setDoc(doc(db, 'settings', 'storefront'), { brandVisibility: updated }, { merge: true }).catch(err => {
         console.error('[Firestore] brandVisibility sync error:', err);
       });
       return updated;
-    });
-
-    setBrandsList(prev => {
-      const target = prev.find(b => b.name.toLowerCase().replace(/[\s\-_]/g, '') === brandClean || (b.id && b.id.toLowerCase() === brandClean));
-      if (target) {
-        const newVis = !target.isVisible;
-        setDoc(doc(db, 'brands', target.id), { isVisible: newVis }, { merge: true }).catch(e => {});
-        return prev.map(b => b.id === target.id ? { ...b, isVisible: newVis } : b);
-      }
-      return prev;
     });
   }, []);
 

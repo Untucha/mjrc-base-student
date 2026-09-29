@@ -10,5 +10,5 @@ export const CATEGORIES = [
 ];
 
 export const BRANDS = [
-  'HOT WHEELS', 'WLtoys', 'FMS', 'Bburago', 'RLAARLO', 'MJX R/C', 'HStar', 'CCA AUTO', 'MINI GT', 'JIABAILE', 'RGT', 'JJRC', 'HB TOYS', 'MN MODEL', 'TRAXXAS', 'AXIAL', 'ARRMA', 'KYOSHO'
+  'HOT WHEELS', 'WLtoys', 'FMS', 'Bburago', 'RLAARLO', 'MJX R/C', 'HStar', 'CCA AUTO', 'MINI GT', 'JIABAILE', 'RGT', 'JJRC', 'HB TOYS', 'MN MODEL', 'TRAXXAS', 'AXIAL', 'ARRMA', 'KYOSHO', 'Huina'
 ];
