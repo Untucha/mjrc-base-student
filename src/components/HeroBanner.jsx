@@ -1,16 +1,36 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useStore } from '../context/StoreContext';
-import { ArrowRight, ShieldCheck, Zap, Award, Wrench } from 'lucide-react';
+import { useStore, DEFAULT_HERO_BANNER } from '../context/StoreContext';
+import { ArrowRight } from 'lucide-react';
 
 export const HeroBanner = () => {
-  const { setSelectedCategory } = useStore();
+  const { setSelectedCategory, heroBanner } = useStore();
   const navigate = useNavigate();
 
+  const banner = {
+    videoUrl: heroBanner?.videoUrl || DEFAULT_HERO_BANNER.videoUrl,
+    headline: heroBanner?.headline || DEFAULT_HERO_BANNER.headline,
+    subheadline: heroBanner?.subheadline || DEFAULT_HERO_BANNER.subheadline,
+    buttonText: heroBanner?.buttonText || DEFAULT_HERO_BANNER.buttonText,
+    buttonLink: heroBanner?.buttonLink || DEFAULT_HERO_BANNER.buttonLink,
+  };
+
   const handleExploreClick = () => {
-    setSelectedCategory('ALL');
-    navigate('/categories');
-    window.scrollTo(0, 0);
+    if (banner.buttonLink) {
+      if (banner.buttonLink.startsWith('http://') || banner.buttonLink.startsWith('https://')) {
+        window.location.href = banner.buttonLink;
+        return;
+      }
+      if (banner.buttonLink === '/categories' || banner.buttonLink === '/shop') {
+        setSelectedCategory('ALL');
+      }
+      navigate(banner.buttonLink);
+      window.scrollTo(0, 0);
+    } else {
+      setSelectedCategory('ALL');
+      navigate('/categories');
+      window.scrollTo(0, 0);
+    }
   };
 
   return (
@@ -21,7 +41,8 @@ export const HeroBanner = () => {
         
         {/* Seamless Edge-to-Edge Loop Video */}
         <video
-          src="/videos/hero-rc.mp4"
+          key={banner.videoUrl}
+          src={banner.videoUrl}
           autoPlay
           loop
           muted
@@ -38,12 +59,12 @@ export const HeroBanner = () => {
           
           {/* Main Title */}
           <h1 className="text-xl sm:text-2xl md:text-5xl lg:text-6xl font-black tracking-tight text-white leading-tight md:leading-none drop-shadow-md my-2 md:my-4">
-            HYPER-SPEED BASHERS & DRIFT MACHINES
+            {banner.headline}
           </h1>
 
           {/* Subtitle */}
           <p className="text-xs sm:text-lg text-slate-200 font-bold max-w-xl drop-shadow-sm">
-            Bench-tested 4WD beasts with 24H dispatch guarantee.
+            {banner.subheadline}
           </p>
 
           {/* Big Pill Button */}
@@ -52,7 +73,7 @@ export const HeroBanner = () => {
               onClick={handleExploreClick}
               className="group bg-emerald-500 hover:bg-emerald-600 active:scale-95 text-white font-black text-xs sm:text-base px-6 sm:px-8 py-3 sm:py-4 rounded-full shadow-xl shadow-emerald-500/30 flex items-center gap-2.5 transition-all cursor-pointer"
             >
-              <span>⚡ Explore Sale Collection</span>
+              <span>{banner.buttonText.includes('⚡') ? banner.buttonText : `⚡ ${banner.buttonText}`}</span>
               <ArrowRight className="w-4 h-4 sm:w-5 sm:h-5 group-hover:translate-x-1 transition-transform" />
             </button>
           </div>

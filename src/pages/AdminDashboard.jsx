@@ -1988,6 +1988,9 @@ export const AdminDashboard = () => {
     updateWelcomeConfig,
     marqueeTicker,
     updateMarqueeTicker,
+    heroBanner,
+    updateHeroBannerConfig,
+    updateHeroBanner,
     triggerCampaignBroadcast,
     reviewsList,
     addReview,
@@ -2031,6 +2034,44 @@ export const AdminDashboard = () => {
   const [tickerList, setTickerList] = useState(DEFAULT_TICKER_DEFAULTS);
   const [tickerActive, setTickerActive] = useState(true);
   const [isSavingTicker, setIsSavingTicker] = useState(false);
+
+  // Hero Banner State
+  const saveHeroBannerFn = updateHeroBannerConfig || updateHeroBanner;
+  const [heroVideoUrl, setHeroVideoUrl] = useState('');
+  const [heroHeadline, setHeroHeadline] = useState('');
+  const [heroSubheadline, setHeroSubheadline] = useState('');
+  const [heroButtonText, setHeroButtonText] = useState('');
+  const [heroButtonLink, setHeroButtonLink] = useState('');
+  const [isSavingHero, setIsSavingHero] = useState(false);
+
+  useEffect(() => {
+    if (heroBanner) {
+      setHeroVideoUrl(heroBanner.videoUrl || '/videos/hero-rc.mp4');
+      setHeroHeadline(heroBanner.headline || 'HYPER-SPEED BASHERS & DRIFT MACHINES');
+      setHeroSubheadline(heroBanner.subheadline || 'Bench-tested 4WD beasts with 24h dispatch guarantee.');
+      setHeroButtonText(heroBanner.buttonText || 'Explore Sale Collection');
+      setHeroButtonLink(heroBanner.buttonLink || '/categories');
+    }
+  }, [heroBanner]);
+
+  const handleSaveHeroBanner = async () => {
+    try {
+      setIsSavingHero(true);
+      if (saveHeroBannerFn) {
+        await saveHeroBannerFn({
+          videoUrl: heroVideoUrl.trim() || '/videos/hero-rc.mp4',
+          headline: heroHeadline.trim() || 'HYPER-SPEED BASHERS & DRIFT MACHINES',
+          subheadline: heroSubheadline.trim() || 'Bench-tested 4WD beasts with 24h dispatch guarantee.',
+          buttonText: heroButtonText.trim() || 'Explore Sale Collection',
+          buttonLink: heroButtonLink.trim() || '/categories'
+        });
+      }
+    } catch (err) {
+      console.error('Save hero banner error:', err);
+    } finally {
+      setIsSavingHero(false);
+    }
+  };
 
   useEffect(() => {
     if (marqueeTicker) {
@@ -5406,6 +5447,136 @@ export const AdminDashboard = () => {
                   <>
                     <Save className="w-4 h-4" />
                     Save Ticker Settings
+                  </>
+                )}
+              </button>
+            </div>
+          </div>
+
+          {/* HUB 7B: HERO VIDEO BANNER & HEADLINE CONTROLS */}
+          <div className="bg-white border border-slate-200/80 rounded-3xl p-6 shadow-xs space-y-6">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-slate-100">
+              <div>
+                <h3 className="font-black text-lg text-slate-900 flex items-center gap-2">
+                  <span>🎬</span> Hero Video Banner & Headline Controls
+                </h3>
+                <p className="text-xs text-slate-500 font-semibold mt-0.5">
+                  Customize hero background video URL, main headline title, subheadline guarantee, and CTA button label & link
+                </p>
+              </div>
+            </div>
+
+            <div className="space-y-4">
+              {/* Hero Video URL */}
+              <div>
+                <label className="block text-xs font-black text-slate-700 uppercase tracking-wider mb-1.5">
+                  Hero Video URL (.mp4 / Firebase Storage URL)
+                </label>
+                <input
+                  type="text"
+                  value={heroVideoUrl}
+                  onChange={(e) => setHeroVideoUrl(e.target.value)}
+                  placeholder="/videos/hero-rc.mp4 or https://..."
+                  className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold text-slate-800 focus:outline-none focus:ring-2 focus:ring-red-500/20 focus:border-red-500"
+                />
+                {/* Live Video Preview Box */}
+                {heroVideoUrl && (
+                  <div className="mt-2 relative rounded-xl overflow-hidden bg-slate-900 h-28 border border-slate-200">
+                    <video
+                      key={heroVideoUrl}
+                      src={heroVideoUrl}
+                      autoPlay
+                      loop
+                      muted
+                      playsInline
+                      className="w-full h-full object-cover"
+                    />
+                    <div className="absolute bottom-2 left-2 bg-slate-900/80 text-white text-[10px] font-bold px-2 py-0.5 rounded backdrop-blur-xs">
+                      Live Video Preview
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {/* Main Headline */}
+              <div>
+                <div className="flex justify-between items-center mb-1.5">
+                  <label className="block text-xs font-black text-slate-700 uppercase tracking-wider">
+                    Main Headline Title
+                  </label>
+                  <span className="text-[10px] font-bold text-slate-400">
+                    {heroHeadline.length} chars
+                  </span>
+                </div>
+                <input
+                  type="text"
+                  value={heroHeadline}
+                  onChange={(e) => setHeroHeadline(e.target.value)}
+                  placeholder="HYPER-SPEED BASHERS & DRIFT MACHINES"
+                  className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold text-slate-800 focus:outline-none focus:ring-2 focus:ring-red-500/20 focus:border-red-500"
+                />
+              </div>
+
+              {/* Subheadline / Dispatch Guarantee */}
+              <div>
+                <label className="block text-xs font-black text-slate-700 uppercase tracking-wider mb-1.5">
+                  Subheadline / Guarantee Text
+                </label>
+                <input
+                  type="text"
+                  value={heroSubheadline}
+                  onChange={(e) => setHeroSubheadline(e.target.value)}
+                  placeholder="Bench-tested 4WD beasts with 24h dispatch guarantee."
+                  className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold text-slate-800 focus:outline-none focus:ring-2 focus:ring-red-500/20 focus:border-red-500"
+                />
+              </div>
+
+              {/* CTA Button Label & Link */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-xs font-black text-slate-700 uppercase tracking-wider mb-1.5">
+                    Button Label
+                  </label>
+                  <input
+                    type="text"
+                    value={heroButtonText}
+                    onChange={(e) => setHeroButtonText(e.target.value)}
+                    placeholder="Explore Sale Collection"
+                    className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold text-slate-800 focus:outline-none focus:ring-2 focus:ring-red-500/20 focus:border-red-500"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-black text-slate-700 uppercase tracking-wider mb-1.5">
+                    Button Target Link
+                  </label>
+                  <input
+                    type="text"
+                    value={heroButtonLink}
+                    onChange={(e) => setHeroButtonLink(e.target.value)}
+                    placeholder="/categories"
+                    className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold text-slate-800 focus:outline-none focus:ring-2 focus:ring-red-500/20 focus:border-red-500"
+                  />
+                </div>
+              </div>
+            </div>
+
+            {/* Action Buttons */}
+            <div className="pt-4 border-t border-slate-100 flex items-center justify-end">
+              <button
+                type="button"
+                onClick={handleSaveHeroBanner}
+                disabled={isSavingHero}
+                className="px-6 py-3 bg-red-600 hover:bg-red-700 text-white rounded-xl font-bold text-xs shadow-md shadow-red-600/20 flex items-center gap-2 transition-all disabled:opacity-50"
+              >
+                {isSavingHero ? (
+                  <>
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                    Saving Hero Banner...
+                  </>
+                ) : (
+                  <>
+                    <Save className="w-4 h-4" />
+                    Save Hero Banner Settings
                   </>
                 )}
               </button>

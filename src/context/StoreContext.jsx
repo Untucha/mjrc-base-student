@@ -90,7 +90,13 @@ const DEFAULT_LATEST_RC_CARS = [];
 
 const DEFAULT_DRIVER_LOGINS = [];
 const DEFAULT_OTP_LOGS = [];
-const DEFAULT_HERO_BANNER = null;
+export const DEFAULT_HERO_BANNER = {
+  videoUrl: '/videos/hero-rc.mp4',
+  headline: 'HYPER-SPEED BASHERS & DRIFT MACHINES',
+  subheadline: 'Bench-tested 4WD beasts with 24h dispatch guarantee.',
+  buttonText: 'Explore Sale Collection',
+  buttonLink: '/categories'
+};
 const DEFAULT_ADDONS = [];
 const DEFAULT_ORDERS = [];
 const DEFAULT_CUSTOMERS = [];
@@ -3129,6 +3135,43 @@ export const StoreProvider = ({ children }) => {
     return () => unsubscribe();
   }, []);
 
+  // Listen to Firestore store_config/hero_banner document for real-time hero banner settings
+  useEffect(() => {
+    const heroDoc = doc(db, 'store_config', 'hero_banner');
+    const unsubscribe = onSnapshot(heroDoc, (snap) => {
+      if (snap.exists()) {
+        const data = snap.data();
+        setHeroBanner(prev => ({
+          ...DEFAULT_HERO_BANNER,
+          ...prev,
+          ...data
+        }));
+        try { localStorage.setItem('mj_hero_banner_v3', JSON.stringify({ ...DEFAULT_HERO_BANNER, ...data })); } catch (e) {}
+      }
+    }, (err) => {
+      console.warn('[Firestore] Hero banner listener notice:', err);
+    });
+
+    return () => unsubscribe();
+  }, []);
+
+  const updateHeroBannerConfig = useCallback(async (newConfig) => {
+    const updated = {
+      ...DEFAULT_HERO_BANNER,
+      ...(heroBanner || {}),
+      ...newConfig
+    };
+    setHeroBanner(updated);
+    try { localStorage.setItem('mj_hero_banner_v3', JSON.stringify(updated)); } catch (e) {}
+    try {
+      await setDoc(doc(db, 'store_config', 'hero_banner'), updated, { merge: true });
+      showToast('Hero banner settings saved & synced to Firestore!');
+    } catch (err) {
+      console.error('[Firestore] updateHeroBannerConfig error:', err);
+      showToast('Saved locally (Firestore sync error)');
+    }
+  }, [heroBanner, showToast]);
+
   const toggleCategoryVisibility = useCallback(async (categoryName) => {
     if (!categoryName) return;
     setCategoryVisibility(prev => {
@@ -3250,7 +3293,7 @@ export const StoreProvider = ({ children }) => {
     toggleCategoryVisibility,
     setProducts,
     toggleHideProduct,
-    heroBanner,
+    heroBanner: heroBanner || DEFAULT_HERO_BANNER,
     setHeroBanner,
     addonsConfig,
     setAddonsConfig,
@@ -3389,10 +3432,12 @@ export const StoreProvider = ({ children }) => {
     sendCloudWhatsAppMessage,
     getProductById,
     fetchUserProfileAndRestoreData,
-    saveUserAddress
+    saveUserAddress,
+    updateHeroBannerConfig,
+    updateHeroBanner: updateHeroBannerConfig
   }), [
     fetchUserProfileAndRestoreData, saveUserAddress,
-    logoutUser, products, heroBanner, addonsConfig, orders, customers, cart, wishlist, user,
+    logoutUser, products, heroBanner, updateHeroBannerConfig, addonsConfig, orders, customers, cart, wishlist, user,
     searchQuery, selectedCategory, selectedScale, selectedBrand,
     isCartOpen, isCheckoutOpen, isOtpOpen, isAccountOpen, isAdminOpen,
     pendingCheckout, activeProductModal, toastMessage,
