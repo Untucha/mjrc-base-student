@@ -1,3 +1,4 @@
+import bcrypt from 'bcryptjs';
 import React, { useState, useMemo, useEffect } from 'react';
 import { useStore } from '../context/StoreContext';
 import { db } from '../services/firebase';
@@ -2770,17 +2771,61 @@ export const AdminDashboard = () => {
     }
   }, [analyticsRange, displayOrders]);
 
-  const handlePasscodeLogin = (e) => {
+  const handlePasscodeLogin = async (e) => {
     e.preventDefault();
-    const validPasscode = import.meta.env.VITE_ADMIN_PASSCODE || 'admin123';
-    if (passcode.trim() === validPasscode || passcode.trim() === 'admin123' || passcode.trim() === 'MJRC777') {
-      sessionStorage.setItem('mjrc_admin_auth', 'true');
-      setIsAuthenticated(true);
-      setPassError('');
-      setPasscode('');
-      if (showToast) showToast('🔓 Executive Command Center Unlocked');
-    } else {
-      setPassError('Invalid Security Passcode');
+    if (!passcode || !passcode.trim()) {
+      setPassError('Password is required');
+      return;
+    }
+
+    const trimmedPass = passcode.trim();
+    const DEFAULT_ADMIN_HASH = '$2b$12$mejXTB7p7fBmQz0e74Xc8eeHunpZvBd0ioQQ8NB80kbM42lbuj9L.';
+
+    try {
+      // 1. Attempt verification via rate-limited backend API router
+      const res = await fetch('/api/admin/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ password: trimmedPass })
+      });
+
+      const data = await res.json().catch(() => ({}));
+
+      if (res.status === 429) {
+        setPassError(data.message || 'Too many failed login attempts. Account locked for 15 minutes.');
+        return;
+      }
+
+      if (res.ok && data.success) {
+        sessionStorage.setItem('mjrc_admin_auth', data.token || 'true');
+        setIsAuthenticated(true);
+        setPassError('');
+        setPasscode('');
+        if (showToast) showToast('🔓 Executive Command Center Unlocked');
+        return;
+      }
+
+      // 2. Fallback Bcrypt Check against 12-round salted hash
+      if (bcrypt.compareSync(trimmedPass, DEFAULT_ADMIN_HASH)) {
+        sessionStorage.setItem('mjrc_admin_auth', 'true');
+        setIsAuthenticated(true);
+        setPassError('');
+        setPasscode('');
+        if (showToast) showToast('🔓 Executive Command Center Unlocked');
+      } else {
+        setPassError(data.message || 'Invalid Security Password');
+      }
+    } catch (err) {
+      console.warn('Backend login notice, executing client-side bcrypt validation:', err);
+      if (bcrypt.compareSync(trimmedPass, DEFAULT_ADMIN_HASH)) {
+        sessionStorage.setItem('mjrc_admin_auth', 'true');
+        setIsAuthenticated(true);
+        setPassError('');
+        setPasscode('');
+        if (showToast) showToast('🔓 Executive Command Center Unlocked');
+      } else {
+        setPassError('Invalid Security Password');
+      }
     }
   };
 
@@ -2841,14 +2886,17 @@ export const AdminDashboard = () => {
           </div>
           <div>
             <h1 className="text-xl font-black text-slate-900 tracking-tight">MJ E-Commerce Command Center</h1>
-            <p className="text-xs text-slate-500 mt-1 font-medium">Enter PIN passcode to unlock Executive Dashboard</p>
+            <p className="text-xs text-slate-500 mt-1 font-medium">Enter secure password to unlock Executive Dashboard</p>
           </div>
 
           <form onSubmit={handlePasscodeLogin} className="space-y-4">
             <input
               type="password"
+              name="admin-password"
+              id="admin-password"
+              autoComplete="current-password"
               autoFocus
-              placeholder="Enter PIN (admin123)"
+              placeholder="Enter Admin Password"
               value={passcode}
               onChange={(e) => { setPasscode(e.target.value); setPassError(''); }}
               className="w-full bg-slate-50 border border-slate-200 focus:border-emerald-600 rounded-2xl px-4 py-3.5 text-center text-sm font-mono font-bold text-slate-900 placeholder-slate-400 focus:outline-none focus:bg-white"

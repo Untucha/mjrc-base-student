@@ -130,27 +130,37 @@ async function handleCreateOrder(payload, res) {
   for (const item of items) {
     const prodId = item.id || item.productId;
     const qty = Math.max(1, Number(item.quantity || item.qty || 1));
-    let unitPrice = Number(item.price || 0);
-    let allowCoins = item.allowCoinRedemption !== false;
-    let maxCoins = item.maxCoinsRedeemable !== undefined ? Number(item.maxCoinsRedeemable) : 500;
-    let coinDiscount = item.coinDiscountAmount !== undefined ? Number(item.coinDiscountAmount) : Math.round(maxCoins / 5);
 
+    let unitPrice = 0;
+    let prodName = 'Hobby RC Vehicle';
+    let prodImage = null;
+    let allowCoins = true;
+    let maxCoins = 500;
+    let coinDiscount = 100;
+
+    // Server-Side Price & Coin Integrity Check against Firestore DB (Ignore any client-sent price)
     if (db && prodId) {
       try {
         const prodSnap = await getDoc(doc(db, 'products', String(prodId)));
         if (prodSnap && prodSnap.exists()) {
           const prodData = prodSnap.data();
           if (prodData.price !== undefined) unitPrice = Number(prodData.price);
+          if (prodData.name || prodData.title) prodName = prodData.name || prodData.title;
+          if (prodData.image || prodData.imageUrl) prodImage = prodData.image || prodData.imageUrl;
           if (prodData.allowCoinRedemption !== undefined) allowCoins = prodData.allowCoinRedemption !== false;
-          if (prodData.maxCoinsRedeemable !== undefined) maxCoins = Number(prodData.maxCoinsRedeemable);
-          if (prodData.coinDiscountAmount !== undefined) coinDiscount = Number(prodData.coinDiscountAmount);
+          if (prodData.coinsToDeduct !== undefined) maxCoins = Number(prodData.coinsToDeduct);
+          else if (prodData.maxCoinsRedeemable !== undefined) maxCoins = Number(prodData.maxCoinsRedeemable);
+          if (prodData.rupeeDiscountGiven !== undefined) coinDiscount = Number(prodData.rupeeDiscountGiven);
+          else if (prodData.coinDiscountAmount !== undefined) coinDiscount = Number(prodData.coinDiscountAmount);
+          else coinDiscount = Math.round(maxCoins / 5);
         }
       } catch (err) {
         console.warn(`[Payment] Notice fetching product ${prodId} from Firestore:`, err.message);
       }
     }
 
-    cartSubtotal += (unitPrice * qty);
+    const itemTotal = unitPrice * qty;
+    cartSubtotal += itemTotal;
 
     if (allowCoins) {
       totalCartCoinsToBurn += (maxCoins * qty);
@@ -158,12 +168,15 @@ async function handleCreateOrder(payload, res) {
     }
 
     validatedItems.push({
-      ...item,
       id: prodId,
+      name: prodName,
+      title: prodName,
+      image: prodImage,
+      imageUrl: prodImage,
       price: unitPrice,
       quantity: qty,
       selectedColor: item.selectedColor || item.color || null,
-      itemTotal: unitPrice * qty
+      itemTotal: itemTotal
     });
   }
 

@@ -240,7 +240,11 @@ export const CheckoutModal = () => {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
-            items: cart,
+            items: (cart || []).map(item => ({
+              id: item.id || item._id,
+              quantity: Math.max(1, Number(item.quantity || item.qty || 1)),
+              selectedColor: item.selectedColor || item.color || null
+            })),
             deliveryAddress: cleanAddressStr,
             useCoins: redeemCoinsChecked,
             customerPhone: pure10Phone,

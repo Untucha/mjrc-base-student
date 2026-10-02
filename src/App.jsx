@@ -74,11 +74,29 @@ const FloatingWhatsApp = () => {
   );
 };
 
+const NotFoundPage = () => (
+  <div className="min-h-[60vh] flex flex-col items-center justify-center text-center p-6 space-y-4 font-sans">
+    <div className="w-16 h-16 rounded-3xl bg-slate-200 text-slate-700 font-black text-2xl flex items-center justify-center">
+      404
+    </div>
+    <h1 className="text-2xl font-black text-slate-900">Page Not Found</h1>
+    <p className="text-slate-500 text-xs max-w-sm font-medium">
+      The requested URL was not found on this server. Please return to the storefront.
+    </p>
+    <Link
+      to="/"
+      className="px-6 py-3 bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-xs rounded-2xl shadow-md transition-all active:scale-95"
+    >
+      Return to Storefront Home
+    </Link>
+  </div>
+);
+
 const MobileBottomDock = () => {
   const { cartCount, wishlist, setIsCartOpen, setIsAccountOpen } = useStore();
   const location = useLocation();
 
-  if (location.pathname === '/admin') return null;
+  if (location.pathname === '/manage-console-mjx') return null;
 
   return (
     <div className="lg:hidden fixed bottom-0 inset-x-0 bg-white/95 backdrop-blur-md border-t border-slate-200/80 py-2 px-6 flex justify-between items-center z-50 shadow-lg">
@@ -145,7 +163,7 @@ const MobileBottomDock = () => {
 
 const MainContent = () => {
   const location = useLocation();
-  const isAdmin = location.pathname === '/admin';
+  const isAdmin = location.pathname === '/manage-console-mjx';
 
   if (isAdmin) {
     return <AdminDashboard />;
@@ -176,7 +194,11 @@ const MainContent = () => {
           <Route path="/replacement-policy" element={<ReplacementPolicyPage />} />
           <Route path="/terms-and-conditions" element={<TermsConditionsPage />} />
           <Route path="/privacy-policy" element={<PrivacyPolicyPage />} />
-          <Route path="/admin" element={<AdminDashboard />} />
+          <Route path="/manage-console-mjx" element={<AdminDashboard />} />
+          <Route path="/admin" element={<NotFoundPage />} />
+          <Route path="/login" element={<NotFoundPage />} />
+          <Route path="/admin-login" element={<NotFoundPage />} />
+          <Route path="*" element={<NotFoundPage />} />
         </Routes>
       </main>
 

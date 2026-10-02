@@ -1,7 +1,7 @@
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 import { getWhatsAppStatus, sendWhatsAppMessage, disconnectWhatsAppSession, forceResetWhatsAppSession } from './server/whatsappBridge.js';
-import { handlePaymentRoutes } from './server/routes/paymentRoutes.js';
+import apiRoutesMiddleware, { handlePaymentRoutes } from './server/index.js';
 
 const liveSyncPlugin = () => {
   return {
@@ -18,17 +18,12 @@ const liveSyncPlugin = () => {
   };
 };
 
-const paymentDaemonPlugin = () => {
+const apiSecurityDaemonPlugin = () => {
   return {
-    name: 'mjrc-payment-daemon-bridge',
+    name: 'mjrc-api-security-daemon-bridge',
     configureServer(server) {
       server.middlewares.use(async (req, res, next) => {
-        const url = req.url ? req.url.split('?')[0] : '';
-        if (url.startsWith('/api/payment/')) {
-          await handlePaymentRoutes(req, res);
-          return;
-        }
-        next();
+        await apiRoutesMiddleware(req, res, next);
       });
     }
   };
@@ -82,7 +77,7 @@ const whatsappDaemonPlugin = () => {
 };
 
 export default defineConfig({
-  plugins: [react(), liveSyncPlugin(), whatsappDaemonPlugin(), paymentDaemonPlugin()],
+  plugins: [react(), liveSyncPlugin(), whatsappDaemonPlugin(), apiSecurityDaemonPlugin()],
   server: {
     port: 3000,
     host: true,
