@@ -3,6 +3,7 @@ import axios from 'axios';
 import { db } from '../../src/firebase.js';
 import { doc, getDoc, setDoc, updateDoc, increment } from 'firebase/firestore';
 import { sendWhatsAppMessage } from '../whatsappBridge.js';
+import { syncOrderToShiprocket } from '../services/shiprocketService.js';
 
 const getPure10 = (input) => {
   if (!input) return '';
@@ -95,6 +96,8 @@ export async function handlePaymentRoutes(req, res) {
       await handleVerifySignature(payload, res);
     } else if (url === '/api/payment/cancel-order' || url === '/cancel-order') {
       await handleCancelOrder(payload, res);
+    } else if (url === '/api/shiprocket/sync-order' || url === '/api/payment/sync-order' || url === '/sync-order') {
+      await handleSyncShiprocketOrder(payload, res);
     } else {
       return sendJsonResponse(res, 404, { success: false, message: 'Payment endpoint not found' });
     }
@@ -325,6 +328,30 @@ async function handleVerifyShiprocket(payload, res) {
     }
   }
 
+  // Trigger Direct Shiprocket API Order Sync (Non-blocking background call)
+  syncOrderToShiprocket({
+    ...(orderData || {}),
+    ...updatedOrderFields,
+    id: targetId,
+    orderId: targetId,
+    paymentMethod: 'Prepaid'
+  }).then(async (srRes) => {
+    const srUpdate = {
+      shiprocket_synced: srRes.shiprocket_synced,
+      shiprocket_order_id: srRes.shiprocket_order_id || null,
+      shipment_id: srRes.shipment_id || null,
+      updatedAt: new Date().toISOString()
+    };
+    if (!srRes.shiprocket_synced && srRes.error) {
+      srUpdate.shiprocket_sync_error = srRes.error;
+    }
+    if (db && targetId) {
+      await setDoc(doc(db, 'orders', String(targetId)), srUpdate, { merge: true }).catch(() => {});
+    }
+  }).catch((err) => {
+    console.warn('[Shiprocket Order Sync Warning]:', err.message);
+  });
+
   const customerPhone = getPure10(orderData?.phone || orderData?.mobile || customerDetails?.phone);
   const coinsRedeemed = Number(orderData?.coinsRedeemed || 0);
 
@@ -449,4 +476,54 @@ async function handleCancelOrder(payload, res) {
     }
   }
   return sendJsonResponse(res, 200, { success: true, firestoreOrderId });
+}
+
+/**
+ * 5. DIRECT SHIPROCKET ORDER SYNC API ENDPOINT:
+ * POST /api/shiprocket/sync-order
+ */
+async function handleSyncShiprocketOrder(payload, res) {
+  const targetId = payload.id || payload.orderId || payload.firestoreOrderId;
+  let orderData = payload;
+
+  if (db && targetId) {
+    try {
+      const snap = await getDoc(doc(db, 'orders', String(targetId)));
+      if (snap && snap.exists()) {
+        orderData = { ...snap.data(), ...payload };
+      }
+    } catch (err) {
+      console.warn('[Shiprocket Sync] Notice reading Firestore order:', err.message);
+    }
+  }
+
+  // Execute Shiprocket API Adhoc Order Creation
+  const srResult = await syncOrderToShiprocket(orderData);
+
+  const updateFields = {
+    shiprocket_synced: srResult.shiprocket_synced,
+    shiprocket_order_id: srResult.shiprocket_order_id || null,
+    shipment_id: srResult.shipment_id || null,
+    updatedAt: new Date().toISOString()
+  };
+  if (!srResult.shiprocket_synced && srResult.error) {
+    updateFields.shiprocket_sync_error = srResult.error;
+  }
+
+  if (db && targetId) {
+    try {
+      await setDoc(doc(db, 'orders', String(targetId)), updateFields, { merge: true });
+      console.log(`📦 [Firestore Order #${targetId}] Saved Shiprocket sync state: shiprocket_synced=${srResult.shiprocket_synced}, order_id=${srResult.shiprocket_order_id || 'N/A'}, shipment_id=${srResult.shipment_id || 'N/A'}`);
+    } catch (err) {
+      console.warn('[Firestore] Error saving Shiprocket sync status:', err.message);
+    }
+  }
+
+  return sendJsonResponse(res, 200, {
+    success: true,
+    shiprocket_synced: srResult.shiprocket_synced,
+    shiprocket_order_id: srResult.shiprocket_order_id || null,
+    shipment_id: srResult.shipment_id || null,
+    error: srResult.error || null
+  });
 }

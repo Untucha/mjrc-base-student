@@ -417,6 +417,24 @@ export const CheckoutModal = () => {
     }
 
     const resolvedOrderId = generatedOrderId || `MJ-${Math.floor(80000 + Math.random() * 19000)}`;
+
+    // Trigger Direct Shiprocket API Order Sync for COD Order (Non-blocking background call)
+    fetch('/api/shiprocket/sync-order', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        ...newOrder,
+        id: resolvedOrderId,
+        orderId: resolvedOrderId,
+        customerName: customerName,
+        customerEmail: user?.email || '',
+        phone: pure10Phone,
+        items: cart,
+        totalAmount: finalPayableTotal,
+        paymentMethod: 'COD'
+      })
+    }).catch((srErr) => console.warn('[CheckoutModal] Shiprocket COD sync notice:', srErr));
+
     const itemsSummary = (cart || []).map(i => `${i.name || i.title} (x${i.quantity || i.qty || 1})`).join(', ');
     const firstItem = (cart && cart.length > 0) ? cart[0] : (newOrder.items?.[0] || {});
     const primaryProductImage = (Array.isArray(firstItem.images) && firstItem.images.length > 0)
